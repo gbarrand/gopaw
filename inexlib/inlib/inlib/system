@@ -95,9 +95,9 @@ inline bool check_getenv(std::ostream& a_out,
   return false;
 }
 
-inline int execute(std::ostream& a_out,const std::string& a_string) {
+inline int std_system(std::ostream& a_out,const std::string& a_string) {
 #if TARGET_OS_IPHONE
-  a_out << "inlib::execute : system() not available on iOS. Can't execute " << sout(a_string) << "." << std::endl;
+  a_out << "inlib::std_system : system() not available on iOS. Can't execute " << sout(a_string) << "." << std::endl;
   return EXIT_FAILURE;
 #else
   return ::system(a_string.c_str());

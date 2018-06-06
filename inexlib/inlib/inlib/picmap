@@ -7,6 +7,11 @@
 #ifndef inlib_picmap
 #define inlib_picmap
 
+#ifdef INLIB_MEM
+#include "mem"
+#include "S_STRING"
+#endif
+
 #include <vector>
 #include <string>
 
@@ -14,17 +19,36 @@ namespace inlib {
 namespace SOPI { //pi clashes with inlib::pi(). PI clashes with some cpp macro coming for example from wcslib.
 
 class color {
+#ifdef INLIB_MEM
+  INLIB_SCLASS(inlib::SOPI::color)
+#endif
 protected:
   typedef unsigned short ushort;
   typedef unsigned char uchar;
 public:
-  color():red(0),green(0),blue(0){}
+  color():red(0),green(0),blue(0){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
   color(ushort a_r,ushort a_g,ushort a_b)
-  :red(a_r),green(a_g),blue(a_b){}
-  virtual ~color(){}
+  :red(a_r),green(a_g),blue(a_b){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  virtual ~color(){
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
 public:
   color(const color& a_from)
-  :red(a_from.red),green(a_from.green),blue(a_from.blue){}
+  :red(a_from.red),green(a_from.green),blue(a_from.blue){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
   color& operator=(const color& a_from){
     red = a_from.red;
     green = a_from.green;
@@ -44,18 +68,33 @@ public:
 };
 
 class cmap {
+#ifdef INLIB_MEM
+  INLIB_SCLASS(inlib::SOPI::cmap)
+#endif
 protected:
   typedef unsigned short ushort;
 public:
   static const color& black() {static color s_v(0,0,0);return s_v;}
 public:
-  cmap(unsigned int a_sz):m_cols(a_sz){}
-  cmap(const cmap& a_from):m_cols(a_from.m_cols){}
+  cmap(unsigned int a_sz):m_cols(a_sz){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
+  cmap(const cmap& a_from):m_cols(a_from.m_cols){
+#ifdef INLIB_MEM
+    mem::increment(s_class().c_str());
+#endif
+  }
   cmap& operator=(const cmap& a_from){
     m_cols = a_from.m_cols;
     return *this;
   }
-  virtual ~cmap(){}
+  virtual ~cmap(){
+#ifdef INLIB_MEM
+    mem::decrement(s_class().c_str());
+#endif
+  }
 public:
   const color& get_color(unsigned int a_index) const {
     if(a_index>=m_cols.size()) return black();

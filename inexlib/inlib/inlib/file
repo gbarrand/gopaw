@@ -506,7 +506,7 @@ inline bool std_rename(const std::string& a_from,const std::string& a_to) {
   //NOTE : a_from must not be a path !
   //       Darwin is ok with a path but not Linux !
   //       For example : 
-  //         ::rename("/tmp/tmp01"."x");
+  //         ::rename("/tmp/tmp01","x");
   //       return -1 on Linux.
   //       To do the upper then someone must use move. 
   //       But there is no move in the standard lib C !

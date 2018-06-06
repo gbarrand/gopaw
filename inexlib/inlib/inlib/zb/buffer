@@ -42,7 +42,7 @@ protected:
   class point_writer : public virtual writer {
   public:
     virtual void write(ZPos a_x,ZPos a_y,ZZ a_z) {
-      if(m_size>1) {
+      if(m_size>=1) { //see zb_action::npix().
         ZPos x,y;
         for(int i=-int(m_size);i<=int(m_size);i++) {
           x = a_x + i;
