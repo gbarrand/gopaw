@@ -9,7 +9,7 @@ items="PAW_cpp_root PAW_f77_hbook PAW_py_root users gopaw"
 
 for item in ${items} ; do
   ${bush_home}/find_rm ../examples/${item} 'gopaw_*_wrap_*.cpp'
-  ${bush_home}/find_rm ../examples/${item} 'gopaw_f77_new_*.f'
+  ${bush_home}/find_rm ../examples/${item} 'gopaw_*_new_*.*'
   ${bush_home}/find_rm ../examples/${item} '*.bundle'
   ${bush_home}/find_rm ../examples/${item} '*.so'
   ${bush_home}/find_rm ../examples/${item} '*.dll'

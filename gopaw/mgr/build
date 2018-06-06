@@ -17,6 +17,7 @@ build_offscreen=no
 
 build_hdf5=yes
 build_Python=yes
+build_cfitsio=yes
 
 build_args=
 build_what=build_none
@@ -26,6 +27,7 @@ while test $# -ge 1 ; do
     -offscreen) build_offscreen=yes;;
     -check_all) check_all=yes;;
     -no_hdf5) build_hdf5=no;;
+    -no_cfitsio) build_cfitsio=no;;
     -no_py) build_Python=no;;
     -*) build_args="${build_args} $1";;
      *) build_args="${build_args} $1";if [ $# = 1 ] ; then build_what=$1; fi;;
@@ -50,11 +52,17 @@ if [ ${build_app} = "yes" ] ; then
 
   cppflags="${cppflags} -DINLIB_USE_CSZ"  # to read sstudeny.root
 
+ #cppflags="${cppflags} -DAPP_USE_EXPAT"
+  
   if [ ${build_hdf5} = "yes" ] ; then cppflags="${cppflags} -DAPP_USE_HDF5";fi
 
   if [ ${build_Python} = "yes" ] ; then
     cppflags="${cppflags} -DAPP_USE_PYTHON"
     cppfiles="${cppfiles} ${exlib_home}/exlib/spy/inlib_swig_py.cpp"
+  fi
+  
+  if [ ${build_cfitsio} = "yes" ] ; then
+    cppflags="${cppflags} -DAPP_USE_CFITSIO"
   fi
   
   cfiles="${cfiles} ../source/PAWCDF.c"
@@ -159,6 +167,8 @@ if [ ${build_app} = "yes" ] ; then
   use_png=yes
   use_dl=yes
 
+ #use_expat=yes
+  
   if [ ${build_hdf5} = "yes" ] ; then
     use_hdf5=yes
     use_thread=yes
@@ -168,6 +178,9 @@ if [ ${build_app} = "yes" ] ; then
     use_thread=yes
     use_zip=yes
   fi
+  if [ ${build_cfitsio} = "yes" ] ; then
+    use_cfitsio=yes
+  fi
   
   . ${bush_home}/use/inlib
   . ${bush_home}/use/exlib
@@ -176,10 +189,12 @@ if [ ${build_app} = "yes" ] ; then
   . ${bush_home}/use/Python
   . ${bush_home}/use/freetype
   . ${bush_home}/use/hdf5     #centos7 : before zlib.
+  . ${bush_home}/use/cfitsio
   . ${bush_home}/use/zip
   . ${bush_home}/use/zlib
   . ${bush_home}/use/csz
   . ${bush_home}/use/gl2ps
+ #. ${bush_home}/use/expat
   
   . ${bush_home}/use/jpeg
   . ${bush_home}/use/png
