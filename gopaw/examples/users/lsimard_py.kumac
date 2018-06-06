@@ -1,0 +1,31 @@
+MACRO lsimard_py
+
+*Valeur maximum des activites
+max_act = 0.4
+
+do i = 8,10
+
+ve/del run; ve/del run; ve/del erun; ve/del act; ve/del eact
+ve/cr run(100000) r 100000*0.
+ve/cr erun(100000) r 100000*0.
+ve/cr act(100000) r 100000*0.
+ve/cr eact(100000) r 100000*0.
+
+for/call read.py([i])
+
+
+  fo/fil 4 act_run_[i].eps; meta 4 -113
+*  run_min = 1870+[i]*200.-200.
+*  run_max = 1870+[i]*200.
+*  run_max = 1870+[i]*200.-70.
+  run_min = 3580+[i]*200.-200.
+  run_max = 3580+[i]*200.
+  run_max = 3580+[i]*200.-100.
+  null  [run_min] [run_max] 0. [max_act]
+* circle_filled = 20.
+  hplot/errors run act erun eact 10000 20 0.3
+  atit 'Run number' 'Radon activity (Bq)'
+  close 4
+  render
+  wait ! 2
+enddo  
