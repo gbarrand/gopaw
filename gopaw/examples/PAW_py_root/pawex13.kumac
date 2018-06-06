@@ -26,11 +26,10 @@ text 0.55 95. 'LEP Very Preliminary' 0.35 25.
 set htyp 0
 * GB :
 close 1
-histogram/file 1 pawhists_U.root ! N
+histogram/file 1 $GOPAW_TMP_DIR/pawhists_U.root ! N
 hrout 0
 close 1
-*SHELL mv pawhists_U.root pawhists.root
-session/move pawhists_U.root pawhists.root
+session/move $GOPAW_TMP_DIR/pawhists_U.root pawhists.root
 hi/del 0
 zone
 RETURN
