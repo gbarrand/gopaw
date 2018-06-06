@@ -202,6 +202,7 @@ if [ ${app} = gopaw ] ; then
   /bin/cp -R ../scripts  ${to}/gopaw/.
   ./clean_exas
   /bin/cp -R ../examples ${to}/gopaw/.
+  /bin/rm -R ${to}/gopaw/examples/users/fcavalier_lock_acq
 
   /bin/cp ../doc/README_for_pack ${to}/README
 fi

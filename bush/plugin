@@ -29,6 +29,7 @@ else
     /bin/rm -f ./cl_exe_tmp
     eval cl.exe /nologo /MD /O2 /W3 /wd4996 /Fewindef.exe ${bush_home}/visual/windef.c > ./cl_exe_tmp
     use_status=$?;if [ ${use_status} != 0 ] ; then cat ./cl_exe_tmp;/bin/rm -f ./cl_exe_tmp;exit ${use_status}; fi
+    /bin/rm -f ./cl_exe_tmp
 
     # Building the .def file :
     /bin/rm -f ./dumpbin_exe_tmp

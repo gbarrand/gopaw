@@ -16,6 +16,7 @@ doc_version=${version}_1
 build_verbose=no
 build_set_x=no
 build_clear=no
+build_to_git_pages=no
 
 build_args=""
 while test $# -ge 1 ; do
@@ -29,6 +30,7 @@ while test $# -ge 1 ; do
         exit ;;
     -x) build_set_x=yes;build_args="${build_args} $1" ;;
     -clear) build_clear=yes ;;
+    -to_github) build_to_git_pages=yes;;
     -*) echo "bush/doc/doxygen_web : unknwon option : $1" ; exit ;;
   esac
   shift
@@ -45,7 +47,15 @@ cd ${bush_home}
 bush_home=`pwd`
 cd "${save_dir}"
 
-web_dir="${bush_home}/../docs/${app}_doc/${doc_version}"
+if [ ${build_to_git_pages} = yes ] ; then
+  if [ ${app} = softinex ] ; then
+    web_dir="${bush_home}/../github/gbarrand.github.io/${doc_version}"
+  else    
+    web_dir="${bush_home}/../github/gbarrand.github.io/${app}/${doc_version}"
+  fi      
+else
+  web_dir="${bush_home}/../docs/${app}_doc/${doc_version}"
+fi
 /bin/mkdir -p ${web_dir}
 
 # To find Times.ttf :
