@@ -29,6 +29,7 @@ extern "C" {
  * quasi-standard functions missing in some C-libraries
  */
   extern void* kmemmove( void* dst, const void* src, size_t n ); /*GB*/
+  extern void kuip_strcpy(char* dst, const char* src); /*GB*/
 
 /* GF. make conform to kkern.c#if !defined(__convexc__)*/
 #ifdef HAVE_STRCASECMP
