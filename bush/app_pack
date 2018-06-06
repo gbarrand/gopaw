@@ -98,7 +98,7 @@ items="${items} freetype jpeg png expat gl2ps zip zlib csz"
 if [ ${app} = g4exa ] ; then items="${items} AIDA";fi
 if [ ${app} = g4view ] ; then items="${items} pythia8";fi
 if [ ${app} = TouchSky ] ; then items="${items} cfitsio hdf5 wcslib lua";fi
-if [ ${app} = gopaw ] ; then items="${items} KUIP Getline Python hdf5";fi
+if [ ${app} = gopaw ] ; then items="${items} KUIP Getline Python hdf5 cfitsio";fi
 for item in ${items} ; do
   /bin/cp -R ${ourex_home}/${item} ${to}/inexlib/ourex/.
 done
