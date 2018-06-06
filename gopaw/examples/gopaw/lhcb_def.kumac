@@ -53,9 +53,7 @@ mess ' '
 mess '     Problems, suggestions, contributions to Thomas.Schietinger@cern.ch' 
 mess ' ' 
 
- *** G.Barrand : 2 = hershey :
- lhcbfont = 2
- *lhcbfont = -60
+ lhcbfont = -60
  lhcbwidth = 10
 
 * set PostScript font (6 = helvetica-bold, precision 0):
@@ -70,7 +68,7 @@ mess ' '
  set ymgl 3
  set xmgl 3
  set ymgu 1
- set xmgr 1
+ set xmgr 1.5
 
  set xlab 1.8
  set xval 0.1

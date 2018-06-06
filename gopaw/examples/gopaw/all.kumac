@@ -90,6 +90,12 @@ render
 synchronize
 wait 'wait...' 2
 
+mess "root_style.kumac..."
+exec root_style.kumac
+render
+synchronize
+wait 'wait...' 2
+
 mess "nplot.kumac..."
 exec nplot.kumac
 render
@@ -144,8 +150,68 @@ render
 synchronize
 wait 'wait...' 2
 
+mess "pawdemo.kumac..."
+exec pawdemo.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "ttf.kumac..."
+exec ttf.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "formulas.kumac..."
+exec formulas.kumac
+render
+synchronize
+wait 'wait...' 2
+
+*////////////////////////////////////////
+*/// hdf5 related : /////////////////////
+*////////////////////////////////////////
 mess "hdf5.kumac..."
 exec hdf5.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "B4.kumac..."
+exec B4.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "B4_rstyle.kumac..."
+exec B4_rstyle.kumac
+render
+synchronize
+wait 'wait...' 2
+
+*////////////////////////////////////////
+*/// fits related : /////////////////////
+*////////////////////////////////////////
+mess "ntuple_fits.kumac..."
+exec ntuple_fits.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "m51.kumac..."
+exec m51.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "sdss.kumac..."
+exec sdss.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "hst.kumac..."
+exec hst.kumac
 render
 synchronize
 wait 'wait...' 2

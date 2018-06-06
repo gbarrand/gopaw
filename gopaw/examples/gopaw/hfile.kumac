@@ -16,7 +16,7 @@ H/CREATE/1D h1 'My histo' 100 0 10
 H/PLOT h1
 
 * Open a file :
-H/FILE 10 analysis.root
+H/FILE 10 data_analysis.root
 * cd in file :
 CD //LUN10/histograms
 H/LIST 
