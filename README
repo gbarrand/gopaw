@@ -1,3 +1,45 @@
 
- Coming soon...
+  To build :
+    UNIX> cd gopaw/mgr
+    UNIX> ./build  # X11 version on macOS, Linux, win32 on a Windows-10/cygwin.
+  ( UNIX> ./build -v)
+  ( UNIX> ./build -x  # for a full traceback)
+    UNIX> ./build -offscreen -bin_offscreen  # for the offscreen version (user is not prompted).
+    
+ (here UNIX is for Linux, macOS, Windows-10/cygwin)
+
+  If the GNU parallel application is known from your prompt, you can use the "-parallel"
+ option so that C and C++ file compilations are distributed on your cores. This feature
+ had been tested with success on macOS with a MacPorts installation of the GNU parallel program
+ and on centos7 by using the GNU distribution. Since good part of the code of gopaw
+ is pure header, it will not boost the "main" part of it, but it clearly boosts the
+ build of the ourex externals.
+
+  At end, you should have a distribution file :
+    bin_<config>/distrib/gopaw-<version>-<platform>.zip
+    
+  To run from the build area :
+    UNIX> ./bin_<config>/distrib/gopaw/<version>/bin/gopaw
+ To run, for examples the PAW_py_root examples :
+    UNIX> cd ../examples/PAW_py_root
+    UNIX> ../../mgr/bin_<config>/distrib/gopaw/<version>/bin/gopaw
+    GOPAW> exec pawex1
+    GOPAW> exec pawex10  # it executes the mandel.py function script.
+    GOPAW> exec all
+ If built, to run the offscreen version :
+    UNIX> ../../mgr/bin_offscreen/distrib/gopaw/<version>/bin/gopaw pawex10.kumac  # it produces a mandel.ps.
+ To cleanup the examples area :
+    UNIX> cd ../../mgr
+    UNIX> ./clean_exas
+
+ On Windows, the application must be run from a DOS prompt (and not from cygwin since Getline does
+ not work from here) :
+    DOS> cd gopaw\mgr
+    DOS> cd ..\examples\PAW_py_root
+    DOS> ..\..\mgr/bin_visual\distrib\gopaw\<version>\bin\gopaw.exe
+    GOPAW> exec pawex1
+    GOPAW> exec pawex10  # it executes the mandel.py function script.
+    GOPAW> exec all
+
+  See the gopaw section on http://gbarrand.github.io for more.
 
