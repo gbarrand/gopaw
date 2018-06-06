@@ -21,6 +21,12 @@ public:
   virtual void set_produce_jpeg(bool a_value) {parent_viewer::set_produce_out_jpg(a_value);}
   virtual void set_produce_png(bool a_value) {parent_viewer::set_produce_out_png(a_value);}
   virtual void set_produce_file(const std::string& a_file) {parent_viewer::set_produce_out_file(a_file);}
+  virtual void set_background_color(float a_r,float a_g,float a_b,float a_a = 1) {
+    parent_viewer::set_clear_color(a_r,a_g,a_b,a_a);
+  }    
+  virtual void get_background_color(float& a_r,float& a_g,float& a_b,float& a_a) {
+    parent_viewer::get_clear_color(a_r,a_g,a_b,a_a);
+  }
   
   virtual void set_size(unsigned int a_w,unsigned int a_h) {
     base_viewer::_set_size(a_w,a_h);
@@ -104,7 +110,7 @@ namespace gopaw {
 
 class term  {
 public:
-  term(iui& a_ui):m_ui(a_ui) {
+  term(iui& a_ui):m_ui(a_ui),m_accum(false) {
     // NOTE : the two below must be done after the banner had beend dump (then after gopaw_initialize())
     ::ourex_Gl_histinit((char*)"term.hist");
     ::ourex_Getlinem(-1,"GOPAW> ");
@@ -128,12 +134,26 @@ public:
     if(*p) {
       std::string cmd(p);
       inlib::strip(cmd,inlib::trailing,'\n');
-      ::ourex_Gl_histadd((char*)cmd.c_str());
       if((cmd=="quit")||(cmd=="exit")) {
+        ::ourex_Gl_histadd((char*)cmd.c_str());
         m_ui.exit();
+      } else if(cmd.size() && (cmd[cmd.size()-1]=='_')) {
+        m_accum = true;
+        m_cmd += cmd.substr(0,cmd.size()-1);
+        ::ourex_Getlinem(-1,"GOPAW>_ ");
       } else {
-        //::printf("debug : \"%s\" ...\n",cmd.c_str());
-        if(gopaw_kuip_exec(m_ui.out(),cmd)) m_ui.render_it();
+	if(m_accum) {
+          m_cmd += cmd;
+          ::ourex_Gl_histadd((char*)m_cmd.c_str());
+          //::printf("debug : accum : \"%s\" ...\n",m_cmd.c_str());
+          if(gopaw_kuip_exec(m_ui.out(),m_cmd)) m_ui.render_it();
+          m_accum = false;
+          m_cmd.clear();
+	} else {
+          ::ourex_Gl_histadd((char*)cmd.c_str());
+          //::printf("debug : \"%s\" ...\n",cmd.c_str());
+          if(gopaw_kuip_exec(m_ui.out(),cmd)) m_ui.render_it();
+	}
         //::printf("debug : \"%s\" end.\n",cmd.c_str());
         ::ourex_Getlinem(-1,"GOPAW> ");
       }
@@ -143,6 +163,8 @@ public:
   }
 private:
   iui& m_ui;
+  bool m_accum;
+  std::string m_cmd;
 };
 
 class UI_screen : public virtual iui {

@@ -12,6 +12,8 @@ extern "C" {
 
 #include "session"
 
+#include <inlib/sys/dir>
+
 #ifdef APP_USE_PYTHON
 #include <inlib/args>
 #endif
@@ -40,7 +42,7 @@ int gopaw_kuip(void* a_tag) {
     return gopaw::status_success();
   }
   
-  if(cmd_path=="/SESSION/MOVE") {
+  if(cmd_path=="/SESSION/MOVE") { //used in pawex13.kumac.
     std::string FROM = ku_gets();
     std::string TO = ku_gets();
 
@@ -50,15 +52,29 @@ int gopaw_kuip(void* a_tag) {
           << " TO= " << inlib::sout(TO) 
           << std::endl;
     }
-    
-    if(!inlib::file_system::mv(FROM,TO)) {
-      out << "gopaw_kuip : " << cmd_path << " inlib::file_system::mv() failed." << std::endl;
+
+    if(FROM==TO) return gopaw::status_success();
+
+    if(!inlib::file::copy_bytes(FROM,TO)) {
+      out << "gopaw_kuip : " << cmd_path << " inlib::file::copy_bytes(FROM,TO) failed with :" << std::endl;
+      out << " FROM = " << inlib::sout(FROM) << std::endl;
+      out << "   TO = " << inlib::sout(TO) << std::endl;
+      return gopaw::status_failure();
+    }
+    if(!inlib::file::std_remove(FROM)) {
+      out << "gopaw_kuip : " << cmd_path << " inlib::file::std_remove(FROM) failed with :" << std::endl;
+      out << " FROM = " << inlib::sout(FROM) << std::endl;
       return gopaw::status_failure();
     }
 
     return gopaw::status_success();
   }
-  
+
+  if(cmd_path=="/SESSION/LLS") {
+    if(!inlib::dir::ls(out,".",false)) {}
+    return gopaw::status_success();
+  }
+ 
   if(cmd_path=="/SESSION/PYTHON") {
 #ifdef APP_USE_PYTHON
     std::string FILE = ku_gets();
@@ -89,6 +105,12 @@ int gopaw_kuip(void* a_tag) {
 #endif
   }
   
+  if(cmd_path=="/SESSION/DELETE") {
+    std::string ID = ku_gets(); //could contain wildcard.
+    _sess.remove_handles(ID);
+    return gopaw::status_success();
+  }
+
   ///////////////////////////////////////////////////////
   /// VIEWER ////////////////////////////////////////////
   ///////////////////////////////////////////////////////
@@ -104,7 +126,6 @@ int gopaw_kuip(void* a_tag) {
   }
   
   if(cmd_path=="/VIEWER/PAGE/SET_LAYOUT") { //use from ioda (exlib::KUIP::opener).
-    //_sess.out() << "gopaw_kuip : " << cmd_path << " : debug." << std::endl;
     inlib::sg::plots* _page = _sess.find_plots(gopaw::s_current());
     if(_page) {
       _sess.set_plots_layout(*_page);
@@ -112,6 +133,28 @@ int gopaw_kuip(void* a_tag) {
     }
     return gopaw::status_success();
   }
+
+  if(cmd_path=="/VIEWER/BACKGROUND_COLOR") {
+    double R = ku_getr();
+    double G = ku_getr();
+    double B = ku_getr();
+    double A = ku_getr();
+    gopaw::iwidget* widget = _sess.ui().current_widget();
+    if(widget) widget->set_background_color(R,G,B,A);
+    return gopaw::status_success();
+  }
+  
+#ifdef APP_USE_EXPAT
+  if(cmd_path=="/VIEWER/PLOTTER/SET_STYLE") {
+    std::string STYLE = ku_gets();
+    inlib::sg::plots* _page = _sess.find_plots(gopaw::s_current());
+    if(_page) {
+      inlib::sg::plotter& _plotter = _sess.page_plotter(*_page);
+      _sess.style_from_res(STYLE,_plotter,false);
+    }
+    return gopaw::status_success();
+  }
+#endif
   
   _sess.out() << "gopaw_kuip : " << cmd_path << " : unknow command." << std::endl;
 

@@ -39,13 +39,13 @@ inline bool set_array(vector_t& aArray,const std::vector<unsigned int>& aIS,cons
 
 }
 
-int sigma_C(const char* aScript,void* a_tag)  { 
+int sigma_C(const char* a_script,void* a_tag)  { 
   // Called by kuip when doing $SIGMA(<exp>)
   // It is used in PAW.cpp to initialize KUIP/SIGMA through a call to kusigm.
   // It is the equivalent of CERNLIBG/pawlib/sigma/src/sigmae.F
   gopaw::session& _sess = *((gopaw::session*)a_tag);
-  //printf("debug : sigma_C : try to proceed \"%s\"...\n",aScript);
-  SIGMA(_sess,aScript); 
+  //printf("debug : sigma_C : try to proceed \"%s\"...\n",a_script);
+  SIGMA(_sess,a_script); 
   //return 1; //Failure
   return 0; //Success
 }
@@ -75,22 +75,22 @@ void pasigm_(void* a_tag) {
   }
 }
 
-bool SIGMA(gopaw::session& a_session,const std::string& aScript) {
-  if(aScript.empty()) return true;
+bool SIGMA(gopaw::session& a_session,const std::string& a_script) {
+  if(a_script.empty()) return true;
 
   std::ostream& out = a_session.out();
 
-  std::string::size_type eq = aScript.find('=');
+  std::string::size_type eq = a_script.find('=');
   if(eq==std::string::npos) {
-    out << "SIGMA : no assignement in " << inlib::sout(aScript) << std::endl;
+    out << "SIGMA : no assignement in " << inlib::sout(a_script) << std::endl;
     return false;
   }
   
-  std::string assign = aScript.substr(0,eq);
+  std::string assign = a_script.substr(0,eq);
   inlib::strip(assign);
   inlib::touppercase(assign);
 
-  std::string script = aScript.substr(eq+1,aScript.size()-(eq+1));  
+  std::string script = a_script.substr(eq+1,a_script.size()-(eq+1));  
   inlib::tolowercase(script);
   inlib::replace(script,'#',','); //For ARRAY(x,y#z)
 
@@ -100,11 +100,11 @@ bool SIGMA(gopaw::session& a_session,const std::string& aScript) {
 
   std::vector<std::string> names;
   if(!processor.find_variables(names)) {
-    out << "SIGMA : can't find variables in " << inlib::sout(aScript) << std::endl;
+    out << "SIGMA : can't find variables in " << inlib::sout(a_script) << std::endl;
     return false;
   }
   if(!processor.compile(names)) {
-    out << "SIGMA : compilation of " << inlib::sout(aScript) << " failed." << std::endl;
+    out << "SIGMA : compilation of " << inlib::sout(a_script) << " failed." << std::endl;
     return false;
   }
 
@@ -125,7 +125,7 @@ bool SIGMA(gopaw::session& a_session,const std::string& aScript) {
     if(!a_session.find_vector(name,vector)) {
       if(!variables.is_key(name)) {  // Search in sSIGMA variables :
         out << "SIGMA : can't find variable " << inlib::sout(name)
-            << " in script " << inlib::sout(aScript) << "."
+            << " in script " << inlib::sout(a_script) << "."
             << std::endl;
         return false;
       }
@@ -152,12 +152,12 @@ bool SIGMA(gopaw::session& a_session,const std::string& aScript) {
   gopaw::value_t var;
   std::string serror;
   if(!processor.execute(vals,var,serror)) {
-    out << "SIGMA : execution of " << inlib::sout(aScript) << " failed." << std::endl;
+    out << "SIGMA : execution of " << inlib::sout(a_script) << " failed." << std::endl;
     out << serror << std::endl;
     return false;
   }
   if(serror==gopaw::value_t::error_div_zero()) {
-    out << "SIGMA : execution of " << inlib::sout(aScript) << " has divide by zero errors, but continue anyway." << std::endl;
+    out << "SIGMA : execution of " << inlib::sout(a_script) << " has divide by zero errors, but continue anyway." << std::endl;
   }
 
   if(var.type()==gopaw::value_t::DOUBLE) {
@@ -179,14 +179,14 @@ bool SIGMA(gopaw::session& a_session,const std::string& aScript) {
 
     gopaw::vector_t* vassign = new gopaw::vector_t(is);
     if(!vassign) {
-      out << "SIGMA : can't create vector " << inlib::sout(assign) << " in script " << inlib::sout(aScript) << "." << std::endl;
+      out << "SIGMA : can't create vector " << inlib::sout(assign) << " in script " << inlib::sout(a_script) << "." << std::endl;
       return false;
     } 
     vassign->vector() = stdv;
     a_session.add_vector(assign,vassign);
 
   } else {
-    out << "SIGMA : result not a vector or a double in script " << inlib::sout(aScript) << "." << std::endl;
+    out << "SIGMA : result not a vector or a double in script " << inlib::sout(a_script) << "." << std::endl;
     return false;
   }
 

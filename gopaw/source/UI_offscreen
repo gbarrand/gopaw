@@ -20,6 +20,12 @@ public:
   virtual void set_produce_jpeg(bool) {}
   virtual void set_produce_png(bool) {}
   virtual void set_produce_file(const std::string&) {}
+  virtual void set_background_color(float a_r,float a_g,float a_b,float a_a = 1) {
+    parent_viewer::set_clear_color(a_r,a_g,a_b,a_a);
+  }
+  virtual void get_background_color(float& a_r,float& a_g,float& a_b,float& a_a) {
+    parent_viewer::get_clear_color(a_r,a_g,a_b,a_a);
+  }
 public:
   virtual void set_size(unsigned int a_w,unsigned int a_h) {
     base_viewer::_set_size(a_w,a_h);

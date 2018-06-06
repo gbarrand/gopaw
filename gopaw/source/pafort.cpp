@@ -13,6 +13,8 @@ extern "C" {
 #include "find_object"
 
 #include <inlib/dirmanip>
+#include <inlib/sjust>
+#include <inlib/forit>
 
 void pafort_(void* a_tag) { 
   gopaw::session& _sess = *((gopaw::session*)a_tag);
@@ -85,6 +87,12 @@ void pafort_(void* a_tag) {
 
     int iLUN = ku_geti();
 
+    if(_sess.verbose_level()) {
+      out << "pafort : " << cmd_path 
+          << " iLUN= " << iLUN
+          << std::endl;
+    }
+
     unsigned int uLUN = iLUN<0?-iLUN:iLUN;
 
     if(!uLUN) {
@@ -103,8 +111,68 @@ void pafort_(void* a_tag) {
       }
     }
       
+  } else if(cmd_path=="/FORTRAN/UNITS") {
+
+    const gopaw::LUNs_t& _LUNs = _sess.LUNs();
+
+    std::vector<std::string> vus; //unit id.
+    std::string _su("Lu");
+    std::string::size_type usmx = _su.size();
+   {std::ostringstream strm;
+   {inlib_mforcit(unsigned int,gopaw::LUN,_LUNs,it) {
+      strm.str("");
+      strm << (*it).first;
+      vus.push_back(strm.str());
+    }}
+   {inlib_vforcit(std::string,vus,it) usmx = inlib::mx(usmx,(*it).size());}
+   {inlib_vforit(std::string,vus,it) inlib::justify(*it,usmx,inlib::side_left);}}
+
+    std::vector<std::string> vfs; //file names.
+    std::string _sf("File name");
+    std::string::size_type fsmx = _sf.size();
+  {{inlib_mforcit(unsigned int,gopaw::LUN,_LUNs,it) vfs.push_back((*it).second.m_string);}
+   {inlib_vforcit(std::string,vfs,it) fsmx = inlib::mx(fsmx,(*it).size());}
+   {inlib_vforit(std::string,vfs,it) inlib::justify(*it,fsmx,inlib::side_left);}}
+
+    std::vector<std::string> vts; //unit type.
+    std::string _st("File type");
+    std::string::size_type tsmx = _st.size();
+   {std::string _s;
+   {inlib_mforcit(unsigned int,gopaw::LUN,_LUNs,it) {
+      if(!gopaw::LUN::type_to_string((*it).second.m_type,_s)) {}
+      vts.push_back(_s);
+    }}
+   {inlib_vforcit(std::string,vts,it) tsmx = inlib::mx(tsmx,(*it).size());}
+   {inlib_vforit(std::string,vts,it) inlib::justify(*it,tsmx,inlib::side_left);}}
+
+    std::string  su(usmx,'-');
+    std::string  sf(fsmx,'-');
+    std::string  st(tsmx,'-');
+    out << " +-" << su << "-+-" << sf << "-+-" << st << "-+" << std::endl;
+    
+    inlib::justify(_su,usmx,inlib::side_left);
+    inlib::justify(_sf,fsmx,inlib::side_left);
+    inlib::justify(_st,tsmx,inlib::side_left);
+    
+    out << " | " << _su << " | " << _sf << " | " << _st << " |" << std::endl;
+
+    out << " +-" << su << "-+-" << sf << "-+-" << st << "-+" << std::endl;
+
+    size_t index = 0;
+    inlib_mforcit(unsigned int,gopaw::LUN,_LUNs,it) {
+      out << " | " << vus[index] << " | " << vfs[index] << " | " << vts[index] << " |" << std::endl;
+      index++;
+    }
+    out << " +-" << su << "-+-" << sf << "-+-" << st << "-+" << std::endl;
+
   } else if(cmd_path=="/FORTRAN/CALL") {
     std::string UROUT = ku_gets();
+
+    if(_sess.verbose_level()) {
+      out << "pafort : " << cmd_path 
+          << " UROUT = " << inlib::sout(UROUT) 
+          << std::endl;
+    }
 
     // Extract name/parameters :
     std::string name;
@@ -206,6 +274,13 @@ void pafort_(void* a_tag) {
       }
       fargs[index] = number;
     } 
+
+    if(_sess.verbose_level()) {
+      out << "pafort : " << cmd_path 
+          << " UFUNC(" << inlib::sout(UFUNC) << ").point_value() ..."
+          << std::endl;
+    }
+    
     func->point_value(fargs);
 
     delete func;

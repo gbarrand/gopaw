@@ -30,6 +30,26 @@
 #include <inlib/sg/f2plot>
 #include <inlib/sg/dps2plot>
 
+#ifdef APP_USE_EXPAT
+#include <inlib/xml/styles>
+#include <inlib/sg/plotter_style>
+
+#include <exlib/xml/xml_style>
+#include <inlib/xml/wrap_viewplot_style> // inlib/xml/viewplot.style file embeded in an inline function.
+inline bool load_embeded_styles(inlib::xml::styles& a_styles) {
+  std::string ss;
+  unsigned int linen;
+  const char** lines = viewplot_style(linen);
+  for(unsigned int index=0;index<linen;index++) {
+    std::string s = lines[index];
+    inlib::replace(s,"@@double_quote@@","\"");
+    inlib::replace(s,"@@back_slash@@","\\");
+    ss += s + "\n";
+  }
+  return exlib::xml::load_style_string(a_styles,ss);
+}
+#endif
+
 #ifdef APP_USE_PYTHON
 #include <exlib/py_opener>
 #endif
@@ -56,8 +76,11 @@ typedef std::pair<std::string,inlib::base_handle*> named_handle;
 
 inline int cat_HPLSET()    {return 0;}
 inline int cat_IGSET()     {return 1;}
-inline int cat_HPLOPT()    {return 2;}
-inline int cat_GOPAW_OPT() {return 3;}
+inline int cat_GOPAW_SET() {return 2;}
+
+
+inline int cat_HPLOPT()    {return 3;}
+inline int cat_GOPAW_OPT() {return 4;}
 
 inline int status_success() {return 0;}
 inline int status_failure() {return -1;}
@@ -108,6 +131,11 @@ inline void att_opt_init(inlib::params<std::string,double>& aATT,inlib::params<s
   //////////////////////////////////////////////////////////////////////
   /// HPLSET ///////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////
+  // NOTE : the /GRAPHICS/SET command logic (see pagraf) is that a
+  //        value of 0 sets a HPLSET attribute to its default value.
+  //        Then an attribute can't be set to zero if its default
+  //        value is not zero.
+
   aATT.add(cat_HPLSET(),"XSIZ","Size along X",20.00,20.00,0);
   aATT.add(cat_HPLSET(),"YSIZ","Size along Y",20.00,20.00,0);
   aATT.add(cat_HPLSET(),"XMGL","X MarGin Left",2.00,2.00,0);
@@ -166,7 +194,7 @@ inline void att_opt_init(inlib::params<std::string,double>& aATT,inlib::params<s
   aATT.add(cat_HPLSET(),"XCOL","X axis COLor",1,1,0);
   aATT.add(cat_HPLSET(),"YCOL","Y axis COLor",1,1,0);
   aATT.add(cat_HPLSET(),"HWID","Histogram line WIDth",1,1,0);
-  aATT.add(cat_HPLSET(),"BWID","Box line WIDth",1,1,0);
+  aATT.add(cat_HPLSET(),"BWID","Box line WIDth",1.0,1.0,0);
   aATT.add(cat_HPLSET(),"PWID","Picture line WIDth",1,1,0);
   aATT.add(cat_HPLSET(),"FWID","Function line WIDth",1,1,0);
   aATT.add(cat_HPLSET(),"XWID","X ticks WIDth",1,1,0);
@@ -182,8 +210,15 @@ inline void att_opt_init(inlib::params<std::string,double>& aATT,inlib::params<s
   aATT.add(cat_HPLSET(),"NDVZ","Number of DIVisions for Z axis",10510.00,10510.00,0);
   aATT.add(cat_HPLSET(),"FPGN","First PaGe Number",1,1,0);
   aATT.add(cat_HPLSET(),"ERRX","ERRor on X (% of bin width)",0.50,0.50,0);
-  aATT.add(cat_HPLSET(),"1DEF","1DPlot Option",0,0,0);
+  aATT.add(cat_HPLSET(),"1DEF","1D Plot Option",0,0,0);
   aATT.add(cat_HPLSET(),"2DEF","2D Plot Option",0,0,0);
+
+  //////////////////////////////////////////////////////////////////////
+  /// GOPAW_SET ////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  aATT.add(cat_GOPAW_SET(),"TWID","Hershey Text line WIDth",1.0,1.0,0);
+  aATT.add(cat_GOPAW_SET(),"TTFM","Freetype font modeling (outline=1,filled=2,pixmap=3)",3,3,0); //value can't be 0.
+  aATT.add(cat_GOPAW_SET(),"BGCI","Background color index",8,8,0); //8=white.
 
   //////////////////////////////////////////////////////////////////////
   /// HPLOPT ///////////////////////////////////////////////////////////
@@ -215,10 +250,15 @@ inline void att_opt_init(inlib::params<std::string,double>& aATT,inlib::params<s
   aOPT.add(cat_HPLOPT(),"LINZ","LINear or LOGarithmic scale in Z (Lego or Surface)","LINZ","LINZ","LOGZ");
   aOPT.add(cat_HPLOPT(),"HNST","Filling statistics (HSTA) (HNST)","HNST","HNST","HSTA");
 
-  //G.Barrand :
+  //////////////////////////////////////////////////////////////////////
+  /// GOPAW OPT ////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  // if adding an option, think to update in pagraf.cpp the /GRAPHICS/OPTION command.
   aOPT.add(cat_GOPAW_OPT(),"COLL","Coloring by level (COLL) or by VALUE (COLV) (gopaw)","COLL","COLL","COLV");
-  aOPT.add(cat_GOPAW_OPT(),"PTIT","If RTIT, UTIT uses a ROOT-like box for title.","PTIT","PTIT","RTIT");
-  aOPT.add(cat_GOPAW_OPT(),"NBAC","If NBACK the infos region background is transparent.","NBAC","NBAC","BACK");
+  aOPT.add(cat_GOPAW_OPT(),"PTIT","If RTIT, the title box has a ROOT-like style (gopaw).","PTIT","PTIT","RTIT");
+  aOPT.add(cat_GOPAW_OPT(),"PSTA","If RSTA, the infos box has a ROOT-like style (gopaw).","PSTA","PSTA","RSTA");
+  aOPT.add(cat_GOPAW_OPT(),"NBAC","If NBAC, the infos region background is transparent (gopaw).","NBAC","NBAC","BACK");
+  aOPT.add(cat_GOPAW_OPT(),"BGRD","If BGRD, the plotter background is visible (gopaw).","BGRD","BGRD","NBGR");
 }
 
 inline int round_d2i(double a_double){
@@ -237,8 +277,6 @@ inline const inlib::colorf& get_COL(int a_COLOR) {
   // 6 magenta
   // 7 cyan
   // 8 white
-
-  // See also pagpri PAW_inlib::colorf.
 
        if(a_COLOR==0) return inlib::colorf_black();
   else if(a_COLOR==1) return inlib::colorf_black();
@@ -475,9 +513,12 @@ public:
   //,m_hbook
   ,m_function_manager(a_out,a_res_dir,a_verbose_level)
   ,m_atime(inlib::atime::now())
+#ifdef APP_USE_EXPAT
+  ,m_styles(a_out)
+#endif  
 #ifdef APP_USE_PYTHON
   ,m_py_opener()
-#endif  
+#endif
   {
     att_opt_init(m_ATTs,m_OPTs);
   
@@ -524,6 +565,17 @@ public:
   
     m_hbook.m_hrndm1 = _hrndm1;
     m_hbook.m_hfill = _hfill;
+
+#ifdef APP_USE_EXPAT
+  //if(inlib::file::exists("viewplot.style")) {
+  //   exlib::xml::load_style_file(a_out,"viewplot.style",m_styles);
+  //} else {
+      load_embeded_styles(m_styles);
+  //}
+    m_styles.add_colormap("default",inlib::sg::style_default_colormap());
+    m_styles.add_colormap("ROOT",inlib::sg::style_ROOT_colormap());
+#endif
+
   }
   
   virtual ~session() {
@@ -549,6 +601,9 @@ public: //for ioda/main.
   ,fProcessor(a_from.fProcessor)
   ,m_function_manager(a_from.m_out,"",a_from.m_verbose_level)
   ,m_atime(a_from.m_atime)
+#ifdef APP_USE_EXPAT
+  ,m_styles(a_from.m_styles)
+#endif
   {}
 protected:
   session& operator=(const session& a_from){return *this;}  
@@ -612,6 +667,11 @@ public:
     m_LUNs[a_unit] = LUN(a_path,a_file,a_dir,a_dir_owner);
   }
 #endif
+#ifdef APP_USE_CFITSIO
+  void add_LUN_fits_file(unsigned int a_unit,const std::string& a_path,exlib::cfitsio::file* a_file) {
+    m_LUNs[a_unit] = LUN(a_path,a_file);
+  }
+#endif
 
   bool find_LUN(const std::string& a_string,LUN*& a_lun) {
     for(LUNs_t::iterator it=m_LUNs.begin();it!=m_LUNs.end();++it) {
@@ -651,6 +711,19 @@ public:
   }
 #endif //APP_USE_HDF5
 
+#ifdef APP_USE_CFITSIO
+  bool find_fits_file(unsigned int a_unit,exlib::cfitsio::file*& a_file) const {
+    for(LUNs_t::const_iterator it=m_LUNs.begin();it!=m_LUNs.end();++it) {
+      if( ((*it).first==a_unit) && ((*it).second.m_fits_file) ) {
+	a_file = (*it).second.m_fits_file;
+	return true;
+      }
+    }
+    a_file = 0;
+    return false;
+  }
+#endif //APP_USE_CFITSIO
+
   bool find_current_LUN(LUN*& a_lun) {return find_LUN(m_current_unit,a_lun);}
 
   bool find_current_rroot_file(inlib::rroot::file*& a_file,inlib::rroot::directory*& a_dir) {
@@ -666,6 +739,10 @@ public:
 #ifdef APP_USE_HDF5
   bool find_current_hdf5_file(hid_t& a_file,hid_t& a_dir) {return find_hdf5_file(m_current_unit,a_file,a_dir);}
 #endif //APP_USE_HDF5
+
+#ifdef APP_USE_CFITSIO
+  bool find_current_fits_file(exlib::cfitsio::file*& a_file) {return find_fits_file(m_current_unit,a_file);}
+#endif //APP_USE_CFITSIO
 
   void close_LUN(LUN& a_lun) {
     if((a_lun.m_type==LUN::SYS_FILE) && a_lun.m_FILE) {
@@ -857,6 +934,19 @@ public:
     return inlib::remove(m_named_handles,a_name,true);
   }
 
+  void remove_handles(const std::string& a_wildcard) {
+    std::vector<named_handle>::iterator it;
+    for(it=m_named_handles.begin();it!=m_named_handles.end();) {
+      if(inlib::match((*it).first,a_wildcard) ){
+        inlib::base_handle* handle = (*it).second;
+        it = m_named_handles.erase(it);
+        delete handle;
+      } else {
+        it++;
+      }
+    }
+  }
+
   void remove_handle_of_class(const std::string& a_class,const std::string& a_wildcard) {
     std::vector<named_handle>::iterator it;
     for(it=m_named_handles.begin();it!=m_named_handles.end();) {
@@ -932,12 +1022,41 @@ public:
       inlib::sprintf(s,32,"%g",(*it).default_value()); //default
       inlib::justify(s,15,inlib::side_middle);
       a_out << "|" << s;
+
       s = (*it).label(); //label
-      inlib::justify(s,32,inlib::side_left);
-      a_out << "|" << s << "|";
-      a_out << std::endl;        
+    //inlib::justify(s,32,inlib::side_left);
+    //a_out << "|" << s << "|";
+     {std::vector<std::string> words;
+      inlib::words(s," ",false,words);
+      unsigned int index;
+      std::string s1;
+      int l = 0;
+      int istart = inlib::not_found();
+      for(index=0;index<words.size();index++) {
+        if((l+words[index].size()+1)>30) {
+          istart = index;
+          break;
+        }
+        s1 += words[index];
+        s1 += " ";
+        l += words[index].size()+1;
+      }
+      std::string s2;
+      if(istart!=inlib::not_found()) {
+        for(index=(unsigned int)istart;index<words.size();index++) {
+          s2 += words[index];
+          s2 += " ";
+        }
+      }
+      inlib::justify(s1,30,inlib::side_left);
+      a_out << "| " << s1 << " |" << std::endl;        
+      inlib::strip(s2);
+      if(s2!="") {
+        inlib::justify(s2,30,inlib::side_left);
+        a_out << "|             |               |               | " << s2 << " |" << std::endl;
+      }}
     }
-    a_out << "+------------+---------------+---------------+--------------------------------+" << std::endl;  
+    a_out << "+-------------+---------------+---------------+--------------------------------+" << std::endl;  
   }
   
   void showOPTs(std::ostream& a_out,int a_category = -1) { 
@@ -960,8 +1079,9 @@ public:
       s = (*it).alternative();
       inlib::justify(s,15,inlib::side_middle);
       a_out << "|" << s;
+
       s = (*it).label();
-      std::vector<std::string> words;
+     {std::vector<std::string> words;
       inlib::words(s," ",false,words);
       unsigned int index;
       std::string s1;
@@ -988,9 +1108,8 @@ public:
       inlib::strip(s2);
       if(s2!="") {
         inlib::justify(s2,31,inlib::side_left);
-        a_out << "|             |             |               | " 
-            << s2 << " |" << std::endl;
-      }  
+        a_out << "|             |             |               | " << s2 << " |" << std::endl;
+      }}
     }
     a_out << "+------------+---------------+---------------+--------------------------------+" << std::endl;  
   }
@@ -1189,17 +1308,22 @@ public:
   void region_set_layout(inlib::sg::plotter& a_plotter) {
     //::printf("debug : region_set_layout\n");
     
-#ifdef RM_VIEWPORT
-   {SoViewportRegion& viewportRegion = *(a_plotter.getViewportRegion());
-    viewportRegion.background = true;
-    viewportRegion.backgroundColor = inlib::colorf(1,1,1);}
+   {inlib::sg::style& style = a_plotter.background_style();
+    std::string BGRD = m_OPTs.value("BGRD");
+    if(BGRD=="BGRD") { //default
+      style.visible = true;
+    } else if(BGRD=="NBGR") {
+      style.visible = false;
+    }
+    style.back_color = get_SCOL("BGCI");}
     
+#ifdef RM_VIEWPORT
    {SoTextRegion& titleRegion = *(a_plotter.getTitleRegion());
     inlib::sg::text_style& style = titleRegion.get_style(0);
     style.color = inlib::colorf(0,0,0);
     set_font(a_plotter.getTitleRegion()->get_style(0),"GFON");} 
 #endif
- 
+
     a_plotter.title_up = false;
     a_plotter.right_axis_visible = false;
     a_plotter.top_axis_visible = false;
@@ -1214,65 +1338,81 @@ public:
     double YHTI = m_ATTs.value("YHTI"); 
     double TSIZ = m_ATTs.value("TSIZ"); 
   
-    inlib::sg::text_style& titleStyle = a_plotter.title_style();
-    titleStyle.color = inlib::colorf_black();
-    titleStyle.encoding = inlib::sg::encoding_PAW();
-    set_font(titleStyle,"TFON");
+   {inlib::sg::text_style& style = a_plotter.title_style();
+    style.color = inlib::colorf_black();
+    style.encoding = inlib::sg::encoding_PAW();
+    set_font(style,"TFON");
   
+    bool do_style = false;
+    
     std::string HTIT = m_OPTs.value("HTIT");
     if(HTIT=="HTIT") {
-      titleStyle.visible = true;
       a_plotter.title_automated = true;
-      a_plotter.title_up = false;
-      a_plotter.title_height = float(TSIZ);
-      a_plotter.title_to_axis = float(YHTI);
+      do_style = true;
     } else if(HTIT=="UTIT") {
       if(m_UTIT.empty()) {
-        titleStyle.visible = false;
+        style.visible = false;
+        a_plotter.title_box_style().visible = false;
+        do_style = false;
       } else {
-        std::string PTIT = m_OPTs.value("PTIT"); //GB option.
-        if(PTIT=="PTIT") {
-          //a_plotter.titleRegionVisible = false;
-          titleStyle.visible = true;
-          a_plotter.title_up = false;
-          a_plotter.title_height = float(TSIZ);
-          a_plotter.title_to_axis = float(YHTI);
-        } else { //RTIT
-          m_out << "gopaw::session::region_set_layout : RTIT : FIXME."<< std::endl;
-          //a_plotter.titleRegionVisible = true;
-          titleStyle.visible = false;
-        }
         a_plotter.title_automated = false;
         a_plotter.title = m_UTIT;
+        do_style = true;
       }
     }
+    
+    if(do_style) {
+      std::string PTIT = m_OPTs.value("PTIT"); //gopaw option.
+      if(PTIT=="PTIT") {
+        style.visible = true;
+        a_plotter.title_box_style().visible = false;
+        a_plotter.title_up = false;
+        a_plotter.title_height = float(TSIZ);
+        a_plotter.title_to_axis = float(YHTI);
+      } else { //RTIT
+        style.visible = false;
+        inlib::sg::text_style& box_style = a_plotter.title_box_style();
+        // same as in inlib/xml/viewplot.style
+        box_style.visible = true;
+        box_style.back_color = inlib::colorf_ROOT_grey19();
+        box_style.back_shadow = 0.015f;  // % of width.
+        box_style.color = inlib::colorf_black();
+        box_style.font = inlib::sg::font_arialbd_ttf();
+        box_style.front_face = inlib::sg::winding_cw;
+        box_style.smoothing = true;
+        box_style.font_modeling = get_TTFM();
+      //box_style.encoding = inlib::sg::encoding_PAW(); //not ready with ttf.
+      }
+    }}
   
     ///////////////////////
     /// Axes //////////////
     ///////////////////////
-    inlib::sg::axis& xAxis = a_plotter.x_axis();
-    xAxis.modeling = inlib::sg::tick_modeling_hplot();
-    xAxis.line_style().color = inlib::colorf_black();
-    xAxis.ticks_style().color = inlib::colorf_black();
-    xAxis.labels_style().color = inlib::colorf_black();
-    xAxis.title_style().color = inlib::colorf_black();
-    xAxis.mag_style().color = inlib::colorf_black();
-    xAxis.title_hjust = inlib::sg::right;
-    xAxis.title_style().encoding = inlib::sg::encoding_PAW();
-    set_font(xAxis.title_style(),"LFON");
-    set_font(xAxis.labels_style(),"VFON");
+    inlib::sg::axis& x_axis = a_plotter.x_axis();
+    x_axis.modeling = inlib::sg::tick_modeling_hplot();
+   {const inlib::colorf& _color = get_SCOL("XCOL");
+    x_axis.line_style().color = _color;
+    x_axis.ticks_style().color = _color;
+    x_axis.labels_style().color = _color;
+    x_axis.title_style().color = _color;
+    x_axis.mag_style().color = _color;}
+    x_axis.title_hjust = inlib::sg::right;
+    x_axis.title_style().encoding = inlib::sg::encoding_PAW();
+    set_font(x_axis.title_style(),"LFON");
+    set_font(x_axis.labels_style(),"VFON");
     
-    inlib::sg::axis& yAxis = a_plotter.y_axis();
-    yAxis.modeling = inlib::sg::tick_modeling_hplot();
-    yAxis.line_style().color = inlib::colorf_black();
-    yAxis.ticks_style().color = inlib::colorf_black();
-    yAxis.labels_style().color = inlib::colorf_black();
-    yAxis.title_style().color = inlib::colorf_black();
-    yAxis.mag_style().color = inlib::colorf_black();
-    yAxis.title_hjust = inlib::sg::right;
-    yAxis.title_style().encoding = inlib::sg::encoding_PAW();
-    set_font(yAxis.title_style(),"LFON");
-    set_font(yAxis.labels_style(),"VFON");
+    inlib::sg::axis& y_axis = a_plotter.y_axis();
+    y_axis.modeling = inlib::sg::tick_modeling_hplot();
+   {const inlib::colorf& _color = get_SCOL("YCOL");
+    y_axis.line_style().color = _color;
+    y_axis.ticks_style().color = _color;
+    y_axis.labels_style().color = _color;
+    y_axis.title_style().color = _color;
+    y_axis.mag_style().color = _color;}
+    y_axis.title_hjust = inlib::sg::right;
+    y_axis.title_style().encoding = inlib::sg::encoding_PAW();
+    set_font(y_axis.title_style(),"LFON");
+    set_font(y_axis.labels_style(),"VFON");
   
     inlib::sg::axis& zAxis = a_plotter.z_axis();
     zAxis.modeling = inlib::sg::tick_modeling_hplot();
@@ -1288,37 +1428,37 @@ public:
   
     //Axis title SIZe
     double ASIZ = m_ATTs.value("ASIZ");
-    xAxis.title_height = float(ASIZ);
-    yAxis.title_height = float(ASIZ);
+    x_axis.title_height = float(ASIZ);
+    y_axis.title_height = float(ASIZ);
   
     //y length of X axis ticks. Def 0.015 
     double XTIC = m_ATTs.value("XTIC"); 
-    xAxis.tick_length = float(XTIC);
+    x_axis.tick_length = float(XTIC);
   
     //x length of Y axis ticks. Def 0.015 
     double YTIC = m_ATTs.value("YTIC"); 
-    yAxis.tick_length = float(YTIC);
+    y_axis.tick_length = float(YTIC);
   
     //y distance of x tick label to data frame. Def 0.02 
     double YVAL = m_ATTs.value("YVAL"); 
-    xAxis.label_to_axis = float(YVAL);
+    x_axis.label_to_axis = float(YVAL);
   
     //x distance of y tick label to data frame. Def 0.02 
     double XVAL = m_ATTs.value("XVAL"); 
-    yAxis.label_to_axis = float(XVAL);
+    y_axis.label_to_axis = float(XVAL);
   
     //y distance of x title to data frame. Def 0.04  
     double YLAB = m_ATTs.value("YLAB"); 
-    xAxis.title_to_axis = float(YLAB);
+    x_axis.title_to_axis = float(YLAB);
   
     //x distance of y title to data frame. Def 0.07  
     double XLAB = m_ATTs.value("XLAB"); 
-    yAxis.title_to_axis = float(XLAB);
+    y_axis.title_to_axis = float(XLAB);
   
     // axis labels SIZe. Def : 0.28F.
     double VSIZ = m_ATTs.value("VSIZ"); 
-    xAxis.label_height = float(VSIZ);
-    yAxis.label_height = float(VSIZ);
+    x_axis.label_height = float(VSIZ);
+    y_axis.label_height = float(VSIZ);
     zAxis.label_height = float(VSIZ);
     inlib::sg::axis& colorMappingAxis = a_plotter.colormap_axis();
     colorMappingAxis.label_height = float(VSIZ);
@@ -1353,15 +1493,15 @@ public:
    {double d_NDVX = m_ATTs.value("NDVX");
     unsigned int NDVX,labels_id,labels_align;
     get_divisions(m_ZONE.m_NX,d_NDVX,NDVX,labels_id,labels_align);
-    xAxis.divisions = NDVX;
-    set_axis_labels(xAxis,labels_id,labels_align);}
+    x_axis.divisions = NDVX;
+    set_axis_labels(x_axis,labels_id,labels_align);}
   
    {double d_NDVY = m_ATTs.value("NDVY"); 
     unsigned int NDVY,labels_id,labels_align;
   //get_divisions(m_ZONE.m_NY,d_NDVY,NDVY,labels_id,labels_align);
     get_divisions(0,d_NDVY,NDVY,labels_id,labels_align);
-    yAxis.divisions = NDVY;
-    set_axis_labels(yAxis,labels_id,labels_align);}
+    y_axis.divisions = NDVY;
+    set_axis_labels(y_axis,labels_id,labels_align);}
   
    {double d_NDVZ = m_ATTs.value("NDVZ"); 
     unsigned int NDVZ,labels_id,labels_align;
@@ -1373,14 +1513,14 @@ public:
     
     inlib::sg::style& innerFrameStyle = a_plotter.inner_frame_style(); 
     innerFrameStyle.line_width = BWID;
-    xAxis.line_style().width = BWID;
-    yAxis.line_style().width = BWID;
+    x_axis.line_style().width = BWID;
+    y_axis.line_style().width = BWID;
   
     //  PWID  //  1   // Picture line WIDth  
   
-    xAxis.ticks_style().width = get_WID("XWID"); // X ticks WIDth.
+    x_axis.ticks_style().width = get_WID("XWID"); // X ticks WIDth.
   
-    yAxis.ticks_style().width = get_WID("YWID"); // Y ticks WIDth.
+    y_axis.ticks_style().width = get_WID("YWID"); // Y ticks WIDth.
   
     //  CWID  // 0.50 // Color map WIDth     
   
@@ -1441,17 +1581,37 @@ public:
     a_plotter.infosRegionOrigin = inlib::vec2f(float(SMGR),float(SMGU));}
 #endif
 
+    inlib::sg::text_style& style = a_plotter.infos_style();
+   
     std::string NSTA = m_OPTs.value("NSTA");
     std::string NFIT = m_OPTs.value("NFIT");
     if( (NSTA=="STA") || (NFIT=="FIT") )  {
       std::string opts;
       get_infos_opts(opts);
       //a_plotter.infosRegionVisible = true;
-      a_plotter.infos_style().visible = true;
-      a_plotter.infos_style().options = opts.c_str();
+      style.visible = true;
+      style.options = opts.c_str();
+    //style.encoding = inlib::sg::encoding_PAW();
+      set_font(style,"CFON");
     } else {
-      a_plotter.infos_style().visible = false;
+      style.visible = false;
       //a_plotter.infosRegionVisible = false;
+    }
+
+    std::string PSTA = m_OPTs.value("PSTA"); //gopaw option.
+    if(PSTA=="RSTA") {
+      // same as in inlib/xml/viewplot.style
+      style.back_color = inlib::colorf_ROOT_grey19();
+      style.back_shadow = 0.015f;  // % of width.
+      style.color = inlib::colorf_black();
+      style.font = inlib::sg::font_arialbd_ttf();
+      style.front_face = inlib::sg::winding_cw;
+      style.smoothing = true;
+      style.font_modeling = get_TTFM();
+      style.modeling = inlib::sg::infos_modeling_ROOT();
+      a_plotter.infos_width = 0.35F;
+      a_plotter.infos_x_margin = 0.01F;  //from right border.
+      a_plotter.infos_y_margin = 0.005F; //from top border.
     }}
   }
   
@@ -2063,15 +2223,17 @@ public:
   }
 
   template <class STYLE>
-  void set_font(STYLE& aStyle,const std::string& aFONT){
+  void set_font(STYLE& a_style,const std::string& aFONT){
     std::string font;
     double scale;
     bool smoothing,hinting;
     get_font(aFONT,font,scale,smoothing,hinting);
-    aStyle.font = font.c_str();
-    aStyle.smoothing = true;
-    aStyle.hinting = true;
-    aStyle.scale = float(scale);
+    a_style.font = font.c_str();
+    a_style.smoothing = true;
+    a_style.hinting = true;
+    a_style.scale = float(scale);
+    a_style.front_face = inlib::sg::winding_cw;  //if ttf.
+    a_style.font_modeling = get_TTFM();          //if ttf.
   }
   
   void set_HTYP(inlib::sg::plotter& a_plotter,int a_index,int a_HTYP,double a_BARO,double a_BARW) {
@@ -2384,13 +2546,22 @@ public:
   void set_atime(const inlib::atime& a_atime) {m_atime = a_atime;}
   const inlib::atime& atime() const {return m_atime;}
 
+#ifdef APP_USE_EXPAT
+  const inlib::xml::styles& styles() const {return m_styles;}
+  inlib::xml::styles& styles() {return m_styles;}
+  void style_from_res(const std::string& a_path,inlib::sg::plotter& a_plotter,bool a_verbose) {
+    inlib::sg::style_from_res(m_styles,a_path,a_plotter,a_verbose);
+  }
+#endif
+
 #ifdef APP_USE_PYTHON
   const exlib::py_opener& py_opener() const {return m_py_opener;}
   exlib::py_opener& py_opener() {return m_py_opener;}
 #endif
+
 public:
   static bool parse_name(const std::string& a_string,std::string& a_NAME,
-                        std::vector< std::pair<int,int> >& aDims,std::ostream& a_out){
+                         std::vector< std::pair<int,int> >& aDims,std::ostream& a_out){
     //printf("debug : parse_name : \"%s\"\n",a_string.c_str());
     aDims.clear();
     std::string::size_type lbrace = a_string.find('(');
@@ -2545,9 +2716,18 @@ protected:
     return float(inlib::mx<int>(int(WID/2.2),1));  //From graflib/higz/ikernel/islwsc.F
   }
   float get_FWID() const {return get_WID("FWID");}
-  inlib::colorf get_SCOL(const std::string& a_COL) {
+  const inlib::colorf& get_SCOL(const std::string& a_COL) {
     int COL = (int)m_ATTs.value(a_COL);
     return get_COL(COL);
+  }
+public: //for paghpl,pagpri.
+//float get_TWID() const {return m_ATTs.value("TWID");}
+  float get_TWID() const {return get_WID("TWID");}
+  inlib::sg::font_modeling get_TTFM() const {
+    int TTFM = (int)m_ATTs.value("TTFM");
+    if(TTFM==1) return inlib::sg::font_outline;
+    if(TTFM==2) return inlib::sg::font_filled;
+    return inlib::sg::font_pixmap; //default.
   }
 protected:
   std::ostream& m_out;
@@ -2584,6 +2764,9 @@ protected:
   hbook m_hbook;
   gopaw::function_manager m_function_manager;
   inlib::atime m_atime;
+#ifdef APP_USE_EXPAT
+  inlib::xml::styles m_styles;
+#endif  
 #ifdef APP_USE_PYTHON
   exlib::py_opener m_py_opener;
 #endif

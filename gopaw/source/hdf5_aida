@@ -1,8 +1,8 @@
 // Copyright (C) 2018, Guy Barrand. All rights reserved.
 // See the file gopaw.license for terms.
 
-#ifndef hdf5_aida
-#define hdf5_aida
+#ifndef gopaw_hdf5_aida
+#define gopaw_hdf5_aida
 
 #ifdef APP_USE_HDF5
 

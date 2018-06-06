@@ -56,6 +56,12 @@ void paghpl_(void* a_tag) {
     inlib::sg::plots* _page = _sess.find_plots(gopaw::s_current());
     if(!_page) return;
     inlib::sg::plotter& _plotter = _sess.page_plotter(*_page);
+
+   {float TWID = _sess.get_TWID(); //if Hershey. Used in examples/gopaw/lhcb_style.kumac.
+    if(_plotter.x_axis().title_style().font==inlib::sg::font_hershey()) _plotter.x_axis().title_style().line_width = TWID;
+    if(_plotter.y_axis().title_style().font==inlib::sg::font_hershey()) _plotter.y_axis().title_style().line_width = TWID;
+    if(_plotter.z_axis().title_style().font==inlib::sg::font_hershey()) _plotter.z_axis().title_style().line_width = TWID;}
+    
     _plotter.x_axis().title = XTIT;
     _plotter.y_axis().title = YTIT;
     _plotter.z_axis().title = ZTIT;

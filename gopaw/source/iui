@@ -27,6 +27,8 @@ public:
   virtual void set_produce_jpeg(bool) = 0;
   virtual void set_produce_png(bool) = 0;
   virtual void set_produce_file(const std::string&) = 0;
+  virtual void set_background_color(float,float,float,float = 1) = 0;
+  virtual void get_background_color(float&,float&,float&,float&) = 0;
 };
 
 class iui {

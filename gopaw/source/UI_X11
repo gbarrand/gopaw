@@ -116,15 +116,6 @@ protected:
       Atom atom = ::XInternAtom(m_x11.display(),"WM_DELETE_WINDOW",False);
       if(a_event.xclient.data.l[0]==(long)atom) {
         m_to_exit = true;
-/*
-      } else if(a_event.xclient.data.l[0]==(long)m_bg_atom) {      
-        size_t index = a_event.xclient.data.l[1];
-	if(index<m_cmds.size()) {
-          m_out << "debug : UI_X11::dispatch : KUIP " << inlib::sout(m_cmds[index]) << std::endl;
-          if(gopaw_kuip_exec(m_out,m_cmds[index])) render_it();
-	  m_cmds.clear();
-        }
-	*/
       }
 
     } else if(a_event.type==Expose) {

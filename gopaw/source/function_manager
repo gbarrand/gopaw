@@ -10,7 +10,6 @@
 
 #include <inlib/system>
 #include <inlib/touplow>
-#include <inlib/file_system>
 #include <inlib/parse>
 #include <inlib/strip>
 #include <inlib/sys/plugin>
@@ -24,8 +23,8 @@
 namespace gopaw {
 
 class function_manager {
-  typedef inlib::value imp_value_t;
-  typedef inlib::value itf_value_t; 
+  typedef inlib::value imp_value_t;  //imp=implementation.
+  typedef inlib::value itf_value_t;  //itf=interface.
   // if changing the two upper typedef, you have to change, in the below, appearences of the line :
   //%sbool gopaw_cpp_wrap_%s(...)
   //%sbool gopaw_f77_wrap_%s(...)
@@ -382,92 +381,58 @@ public:
     return true;
   }
 
-  static bool find_cpp_functions(const std::string& a_file,
-                                 std::vector<std::string>& a_names,
-                                 std::vector<function_args>& a_args,
-                                 std::vector<unsigned int>& a_parns){
-    a_names.clear();
+  static bool parse_cpp_header(const std::string& a_header,
+                               std::string& a_name,function_args& a_args,unsigned int& a_parn) {
+    a_name.clear();
     a_args.clear();
-    a_parns.clear();
-    std::vector<std::string> lines;
-    std::string _a_file;
-    inlib::file_name(a_file,_a_file);
-    inlib::file::read(_a_file,lines);
-    unsigned int linen = lines.size();
-    for(unsigned int linei = 0;linei<linen;linei++) {
-      std::string& line = lines[linei];
-      std::string sfunc;
+    a_parn = 0;
+
+    std::string line = a_header;
+
+    std::string sfunc;
+    unsigned int parn = 0;
   
-      unsigned int parn = 0;
+   {std::string::size_type pos_func = line.find("/*function(");
+    if(pos_func!=std::string::npos) {
+      // header of the form /*function(<unsigned int>)*/
+      std::string::size_type end_pos_func = line.find(")*/");
+      if( (end_pos_func==std::string::npos) || (pos_func>=end_pos_func) ) return false;
+      sfunc = line.substr(end_pos_func+3,line.size()-(end_pos_func+3));
+      std::string sparn = line.substr(pos_func+11,(end_pos_func-(pos_func+11)));
+      typedef unsigned int uint_t;
+      if(!inlib::to<uint_t>(sparn,parn)) return false; //Syntax error.
+    }}
   
-     {std::string::size_type pos_func = line.find("/*function(");
-      if(pos_func!=std::string::npos) {
-        // header of the form /*function(<unsigned int>)*/
-        std::string::size_type end_pos_func = line.find(")*/");
-        if( (end_pos_func==std::string::npos) || (pos_func>=end_pos_func) ) {
-          a_names.clear();
-          a_args.clear();
-          a_parns.clear();
-          return false;
-        }
-        sfunc = line.substr(end_pos_func+3,line.size()-(end_pos_func+3));
-        std::string sparn = line.substr(pos_func+11,(end_pos_func-(pos_func+11)));
-        typedef unsigned int uint_t;
-        if(!inlib::to<uint_t>(sparn,parn)) { //Syntax error.
-          a_names.clear();
-          a_args.clear();
-          a_parns.clear();
-          return false;
-        }
-      }}
+   {std::string::size_type pos_func = line.find("/*function*/");
+    if(pos_func!=std::string::npos) {
+      sfunc = line.substr(pos_func+12,line.size()-(pos_func+12));
+    }}
   
-     {std::string::size_type pos_func = line.find("/*function*/");
-      if(pos_func!=std::string::npos) {
-        sfunc = line.substr(pos_func+12,line.size()-(pos_func+12));
-      }}
+    if(!sfunc.size()) return true; //not a header.
   
-      if(!sfunc.size()) continue; //not a header.
+    std::string head;
+    std::vector<std::string> sargs;
+    if(!inlib::name_args(sfunc,head,sargs)) return false;
+    inlib::strip(head);
   
-      std::string head;
-      std::vector<std::string> sargs;
-      if(!inlib::name_args(sfunc,head,sargs)) {
-        a_names.clear();
-        a_args.clear();
-        a_parns.clear();
-        return false;
-      }
-      inlib::strip(head);
+    // head is of the form <type> <name>.
+   {std::vector<std::string> words;
+    inlib::words(head," ",false,words);
+    if(words.size()!=2) return false;
+    std::string name = words[1];
+    inlib::strip(name);
+    if(!inlib::is_variable(name)) return false;
+    a_name = name;}
   
-      // head is of the form <type> <name>.
-     {std::vector<std::string> words;
-      inlib::words(head," ",false,words);
-      if(words.size()!=2) {
-        a_names.clear();
-        a_args.clear();
-        a_parns.clear();
-        return false;
-      }
-      std::string name = words[1];
-      inlib::strip(name);
-      if(!inlib::is_variable(name)) {
-        a_names.clear();
-        a_args.clear();
-        a_parns.clear();
-        return false;
-      }
-      a_names.push_back(name);}
+    unsigned int argn = sargs.size();
   
-      unsigned int argn = sargs.size();
-  
-      // Arguments :
-      std::vector<imp_value_t> vargs;
-      for(unsigned int argi=0;argi<argn;argi++) {
+    // Arguments :
+    std::vector<imp_value_t> vargs;
+    for(unsigned int argi=0;argi<argn;argi++) {
         std::vector<std::string> words;
         inlib::words(sargs[argi]," ",false,words);
         if(words.size()!=2) { //Syntax error
-          a_names.clear();
-          a_args.clear();
-          a_parns.clear();
+          a_name.clear();
           return false;
         }
         imp_value_t v;
@@ -480,9 +445,7 @@ public:
         std::string::size_type rbrace = s.find(']');
         if((lbrace==std::string::npos)&&(rbrace==std::string::npos)){
           if(!inlib::is_variable(s)) {
-            a_names.clear();
-            a_args.clear();
-            a_parns.clear();
+            a_name.clear();
             return false;
           }
           v.set_label(s);
@@ -497,9 +460,7 @@ public:
 	  } else if(type_last=="*") {
 	    v.set_type(itf_value_t::VOID_STAR);
           } else { //Type not supported.
-            a_names.clear();
-            a_args.clear();
-            a_parns.clear();
+            a_name.clear();
             return false;
           }
         } else if( (lbrace!=std::string::npos) &&
@@ -507,9 +468,7 @@ public:
                    (lbrace<rbrace)             ){
           std::string NAME = s.substr(0,lbrace);
           if(!inlib::is_variable(NAME)) {
-            a_names.clear();
-            a_args.clear();
-            a_parns.clear();
+            a_name.clear();
             return false;
           }
           std::string DIM = s.substr(lbrace+1,rbrace-(lbrace+1));
@@ -519,9 +478,7 @@ public:
           } else {
             typedef unsigned int uint_t;
             if(!inlib::to<uint_t>(DIM,dim)) { //Syntax error.
-              a_names.clear();
-              a_args.clear();
-              a_parns.clear();
+              a_name.clear();
               return false;
             }
           }
@@ -536,22 +493,47 @@ public:
             //dim could be 0 to indicate pafort.f 
             //to search for an existing VECTOR
           } else { //Type not supported.
-            a_names.clear();
-            a_args.clear();
-            a_parns.clear();
+            a_name.clear();
             return false;
           }
         } else {  //Syntax error.
-          a_names.clear();
-          a_args.clear();
-          a_parns.clear();
+          a_name.clear();
           return false;
         }}          
         vargs.push_back(v);
-  
-      } 
-      a_args.push_back(vargs);
-      a_parns.push_back(parn);
+    }
+    
+    a_args = vargs;
+    a_parn = parn;
+    
+    return true;
+  }
+
+  static bool find_cpp_functions(const std::string& a_file,
+                                 std::vector<std::string>& a_names,
+                                 std::vector<function_args>& a_args,
+                                 std::vector<unsigned int>& a_parns){
+    a_names.clear();
+    a_args.clear();
+    a_parns.clear();
+    std::vector<std::string> lines;
+    std::string _a_file;
+    inlib::file_name(a_file,_a_file);
+    inlib::file::read(_a_file,lines);
+    unsigned int linen = lines.size();
+    for(unsigned int linei = 0;linei<linen;linei++) {
+      std::string name;function_args args;unsigned int parn;
+      if(!parse_cpp_header(lines[linei],name,args,parn)) {
+        a_names.clear();
+        a_args.clear();
+        a_parns.clear();
+	return false;
+      }
+      if(name.size()) {
+        a_names.push_back(name);
+        a_args.push_back(args);
+        a_parns.push_back(parn);
+      }
     }
     return true;
   }
@@ -586,7 +568,23 @@ public:
       if(a_verbose_level) {
         a_out << "gopaw::function_manager::find_py_functions : candidate function header " << inlib::sout(sfunc) << std::endl;
       }
-      
+
+      // look for a "#/*function..." that permits to declare vectors.
+     {std::string name;function_args args;unsigned int parn;
+      if(!parse_cpp_header(lines[linei],name,args,parn)) {
+        a_names.clear();
+        a_args.clear();
+        a_parns.clear();
+	return false;
+      }
+      if(name.size()) {
+        a_names.push_back(name);
+        a_args.push_back(args);
+        a_parns.push_back(parn);
+        continue;
+      }}
+
+      // look for a Python header only (args are considered as doubles) :
       std::string head;
       std::vector<std::string> sargs;
       if(!inlib::name_args(sfunc,head,sargs)) {
@@ -640,7 +638,7 @@ public:
 #endif
 
   static bool edit_f77_file(const std::string& a_file,
-                            const std::string& aNewFile,
+                            const std::string& a_new_file,
                             const std::vector<std::string>& a_names,
                             const std::vector<function_args>& a_args){
     // Create  modified FORTRAN file :
@@ -654,7 +652,7 @@ public:
     inlib::file_name(a_file,_a_file);
     if(!inlib::file::read(_a_file,lines)) return false;
   
-    FILE* out_file = ::fopen(aNewFile.c_str(),"wb");
+    FILE* out_file = ::fopen(a_new_file.c_str(),"wb");
     if(!out_file) return false;
   
     unsigned funci = 0;
@@ -810,15 +808,11 @@ protected:
       }
     }
   
-    std::string path,name,suffix;
+    std::vector<inlib::plugin::procedure> procs;
+    
+   {std::string path,name,suffix;
     inlib::path_name_suffix(new_file,path,name,suffix);
     std::string dll = inlib::nosuffix(name);
-   
-    std::string fullname;
-    inlib::file_name(new_file,fullname);
-    inlib::file_system::cp(fullname,name);
-  
-    std::vector<inlib::plugin::procedure> procs;
     if(!get_procs(dll,suffix,"gopaw_f77_wrap_",funcs,args,procs,a_builder,build_f77_dll)) {
       out << "gopaw::function_manager::load_f77 :" 
           << " unable to get some f77 function in " << inlib::sout(dll)
@@ -826,12 +820,12 @@ protected:
       return false;
     }
     if(m_verbose_level) {
-      out << "gopaw::function_manager::load_f77 : found f77 function in " << inlib::sout(dll) << std::endl;
-    }
+      out << "gopaw::function_manager::load_f77 : found f77 functions in " << inlib::sout(dll) << std::endl;
+    }}
   
     unsigned int funcn = funcs.size();
     for(unsigned int funci=0;funci<funcn;funci++) {
-      add_function(new_file,funcs[funci],(void*)procs[funci],args[funci],0);
+      add_function(a_file,funcs[funci],(void*)procs[funci],args[funci],0);
     }
   
     return true;
@@ -850,9 +844,19 @@ protected:
       out << "gopaw::function_manager::load_cpp : file " << inlib::sout(a_file) << " has no functions." << std::endl;
       return false;
     }
-  
+
+    std::string new_file = "gopaw_cpp_new_"+inlib::nosuffix(a_file)+".c";
+   {std::string _a_file;
+    inlib::file_name(a_file,_a_file); //handle envs, if any.
+    if(!inlib::file::copy_bytes(_a_file,new_file)) {
+      out << "gopaw::function_manager::load_cpp : can't produce new file " << inlib::sout(new_file)
+          << " from file " << inlib::sout(a_file) << "."
+          << std::endl;
+      return false;
+    }}
+
     if(m_verbose_level) {
-      out << "gopaw::function_manager::load_cpp : functions in file " << inlib::sout(a_file) << std::endl;
+      out << "gopaw::function_manager::load_cpp : functions in file " << inlib::sout(new_file) << std::endl;
       unsigned int funcn = funcs.size();
       for(unsigned int funci=0;funci<funcn;funci++) {
         std::string sargs;
@@ -871,15 +875,11 @@ protected:
       }
     }
   
-    std::string path,name,suffix;
-    inlib::path_name_suffix(a_file,path,name,suffix);
-    std::string dll = inlib::nosuffix(name);
-   
-    std::string fullname;
-    inlib::file_name(a_file,fullname);
-    inlib::file_system::cp(fullname,name); //FIXME : avoid this copy.
-  
     std::vector<inlib::plugin::procedure> procs;
+
+   {std::string path,name,suffix;
+    inlib::path_name_suffix(new_file,path,name,suffix);
+    std::string dll = inlib::nosuffix(name);
     if(!get_procs(dll,suffix,"gopaw_cpp_wrap_",funcs,args,procs,a_builder,build_C_plugin)) {
       out << "gopaw::function_manager::load_cpp :" 
           << " unable to get some C function in " << inlib::sout(dll)
@@ -887,8 +887,8 @@ protected:
       return false;
     }
     if(m_verbose_level) {
-      out << "gopaw::function_manager::load_cpp : found C function in " << inlib::sout(dll) << std::endl;
-    }
+      out << "gopaw::function_manager::load_cpp : found C functions in " << inlib::sout(dll) << std::endl;
+    }}
   
     unsigned int funcn = funcs.size();
     for(unsigned int funci=0;funci<funcn;funci++) {
@@ -999,42 +999,151 @@ protected:
       return false;
     }
 
-    PyObject* py_value = 0;
-    if(a_args.size()==0) {
-      py_value = Py_BuildValue("()"); //new ref.
-    } else if(a_args.size()==1) {
-      py_value = Py_BuildValue("(d)",a_args[0]->get_double());
-    } else if(a_args.size()==2) {
-      py_value = Py_BuildValue("dd",a_args[0]->get_double(),a_args[1]->get_double());
-    } else if(a_args.size()==3) {
-      py_value = Py_BuildValue("ddd",a_args[0]->get_double(),a_args[1]->get_double(),a_args[2]->get_double());
+ // a_out << "gopaw::function_manager::py_wrap_func : args :" << std::endl;
+ //{inlib_vforcit(inlib::value*,a_args,it) a_out << " " << (*it)->stype() << std::endl;}
+
+    //mandel.py : //def mandel(XP,YP):         => two args of types  : DOUBLE, DOUBLE.
+    //read.py   : //def read(K,RUN,ACT,EACT):  => four args of types : INT, DOUBLE_STAR, DOUBLE_STAR,DOUBLE_STAR.
+
+    //Py_INCREF(Py_None);
+    //return Py_None;
+	
+    size_t argn = a_args.size();
+    PyObject* py_args = 0;
+    if(!argn) {
+      Py_INCREF(Py_None);
+      py_args = Py_None;
     } else {
-      a_out << "gopaw::function_manager::py_wrap_func : arg number " << a_args.size() << " not handled." << std::endl;
+      py_args = ::PyTuple_New(argn); //new ref.
+    }
+    
+    if(!py_args) {
+      a_out << "gopaw::function_manager::py_wrap_func : build py_args : can't create a PyTuple." << std::endl;
+      ::PyErr_Print();
       a_return.set(0.0);
       return false;
     }
 
-    if(!py_value) {
-      a_out << "gopaw::function_manager::py_wrap_func : Py_BuildValue() failed." << std::endl;
-      ::PyErr_Print();
-      a_return.set(0.0);
-      return false;
-    }
+    typedef std::pair<inlib::value*,PyObject*> arg_py_t; //touchy, touchy.
+    std::vector<arg_py_t> arg_pys;
     
-    PyObject* py_result = PyObject_CallObject(py_func,py_value); //new ref.
+    for(size_t argi=0;argi<argn;argi++) {
+      /*const*/ inlib::value* value = a_args[argi];
+      if(value->type()==inlib::value::INT) {
+        PyObject* obj = ::PyInt_FromLong(value->get_int()); //new ref
+        ::PyTuple_SetItem(py_args,argi,obj);
+	//Py_DECREF(obj); //? it crashes.
+
+      } else if(value->type()==inlib::value::DOUBLE) {
+        PyObject* obj = ::PyFloat_FromDouble(value->get_double()); //new ref
+        ::PyTuple_SetItem(py_args,argi,obj);
+	//Py_DECREF(obj); //?
+	
+      } else if(value->type()==inlib::value::DOUBLE_STAR) {
+        double* dstar = value->get_double_star();
+	unsigned int sz = value->itag();
+	//::printf("debug : 0000 : sz %u\n",sz);
+        PyObject* obj = ::PyList_New(sz); //new ref.
+        for(unsigned int index=0;index<sz;index++) {
+          PyObject* _obj = ::PyFloat_FromDouble(dstar[index]); //new ref
+          ::PyList_SetItem(obj,index,_obj);
+          //Py_DECREF(_obj);
+        }
+        ::PyTuple_SetItem(py_args,argi,obj);
+        arg_pys.push_back(arg_py_t(value,obj));
+
+      } else {
+        a_out << "gopaw::function_manager::py_wrap_func :"
+	      << " for arg " << inlib::sout(value->label())
+	      << ", arg type " << value->stype() << " not treated."
+	      << std::endl;
+        ::PyErr_Print();
+	Py_DECREF(py_args);
+        a_return.set(0.0);
+        return false;
+      } 
+    }
+
+    PyObject* py_result = PyObject_CallObject(py_func,py_args); //new ref.
     if(!py_result) {
       a_out << "gopaw::function_manager::py_wrap_func : PyObject_CallObject() failed." << std::endl;
       ::PyErr_Print();
-      Py_DECREF(py_value);
+      Py_DECREF(py_args);
       Py_DECREF(py_module);
       a_return.set(0.0);
       return false;
     }
     
-    Py_DECREF(py_value);
+    // restore values in arrays :
+   {inlib_vforcit(arg_py_t,arg_pys,it) {
+      inlib::value* value = (*it).first;
+      double* dstar = value->get_double_star();
+      unsigned int sz = value->itag();
+      
+      PyObject* obj = (*it).second;
+      if(!PyList_Check(obj)) {
+        a_out << "gopaw::function_manager::py_wrap_func : after exec : arg PyObject not a PyList." << std::endl;
+        ::PyErr_Print();
+        Py_DECREF(py_args);
+        Py_DECREF(py_result);
+        Py_DECREF(py_module);
+        a_return.set(0.0);
+        return false;
+      }
+      Py_ssize_t psz = ::PyList_Size(obj);
+      
+      if(psz!=Py_ssize_t(sz)) {
+        a_out << "gopaw::function_manager::py_wrap_func : after exec : arg PyList :"
+	      << " PyList/VECTOR size mismatch. PyList " << psz  << ", VECTOR " << sz << "." << std::endl;
+        ::PyErr_Print();
+        Py_DECREF(py_args);
+        Py_DECREF(py_result);
+        Py_DECREF(py_module);
+        a_return.set(0.0);
+        return false;
+      }
+      for(unsigned int index=0;index<sz;index++) {
+        PyObject* _obj = PyList_GetItem(obj,index); //borrowed ref.
+        if(PyFloat_Check(_obj)) {
+          dstar[index] = ::PyFloat_AsDouble(_obj);
+        } else if(PyInt_Check(_obj)) {
+          dstar[index] = double(::PyInt_AsLong(_obj));
+        } else if(PyLong_Check(_obj)) {
+          dstar[index] = double(::PyLong_AsDouble(_obj));
+        } else if(PyString_Check(_obj)) {
+	  std::string _s(::PyString_AsString(_obj));
+	  double d;
+          if(!inlib::to<double>(_s,d)) {
+            a_out << "gopaw::function_manager::py_wrap_func : PyString value "
+                  << inlib::sout(_s) << " not a double."
+                  << std::endl;
+            ::PyErr_Print();
+            Py_DECREF(py_args);
+            Py_DECREF(py_result);
+            Py_DECREF(py_module);
+            a_return.set(0.0);
+            return false;
+	  }
+          dstar[index] = d;
+        } else {
+          a_out << "gopaw::function_manager::py_wrap_func :"
+                << " PyList elem " << index << " not a PyFloat, PyInt or PyString."
+                << " Found " << std::string(_obj->ob_type->tp_name) << "."
+                << std::endl;
+          ::PyErr_Print();
+          Py_DECREF(py_args);
+          Py_DECREF(py_result);
+          Py_DECREF(py_module);
+          a_return.set(0.0);
+          return false;
+	} 
+      }
+    }}
+
+
+    Py_DECREF(py_args);
     
-    double dres = PyFloat_AsDouble(py_result);
-    //a_out << "Result is " << PyFloat_AsDouble(presult) << std::endl;
+    double dres = ::PyFloat_AsDouble(py_result);
     a_return.set(dres);
 
     Py_DECREF(py_result);
@@ -1045,6 +1154,9 @@ protected:
 
   bool load_py(const std::string& a_file,const std::string& a_builder){
     std::ostream& out = m_out;
+    if(m_verbose_level) {
+      out << "gopaw::function_manager::load_py : file " << inlib::sout(a_file) << " ..." << std::endl;
+    }
     std::vector<std::string> funcs;
     std::vector<function_args> args;
     std::vector<unsigned int> parns;
@@ -1077,9 +1189,24 @@ protected:
       }
     }
 
-    if(!import_py(out,a_file)) return false;
-    
+    if(!import_py(out,a_file)) return false;  //import a_file from C++.
+
     std::vector<inlib::plugin::procedure> procs;
+    // we have the same py_wrap_func for all funcs.
+/*
+    std::string path,name,suffix;
+    inlib::path_name_suffix(new_file,path,name,suffix);
+    std::string dll = inlib::nosuffix(name);
+    if(!get_procs(dll,suffix,"gopaw_py_wrap_",funcs,args,procs,a_builder,build_C_plugin)) {
+      out << "gopaw::function_manager::load_py :" 
+          << " unable to get some Python function in " << inlib::sout(dll)
+          << std::endl;
+      return false;
+    }
+    if(m_verbose_level) {
+      out << "gopaw::function_manager::load_py : found Python function in " << inlib::sout(dll) << std::endl;
+    }
+*/
    {unsigned int funcn = funcs.size();
     for(unsigned int funci=0;funci<funcn;funci++) {
       procs.push_back((inlib::plugin::procedure)py_wrap_func);
@@ -1097,9 +1224,7 @@ protected:
 
   gopaw::ifunction* add_function(const std::string& a_file,
                                  const std::string& a_model,
-                                 void* a_address,
-                                 const std::vector<imp_value_t>& a_args,
-                                 unsigned int a_parn){
+                                 void* a_address,const std::vector<imp_value_t>& a_args,unsigned int a_parn){
     if(a_model.empty()) return 0;
     gopaw::ifunction* entry = _find_function(a_model);
     if(entry) return entry;
@@ -1111,48 +1236,48 @@ protected:
 
   typedef bool (*plugin_builder_func)(const std::string&,const std::string&,const std::vector<std::string>&,const std::vector<function_args>&,const std::string&,std::ostream&);
 
-  bool get_procs(const std::string& aPlugin,
-                 const std::string& aSuffix,
-                 const std::string& aPrefix,
-                 const std::vector<std::string>& aFuncs,
+  bool get_procs(const std::string& a_plugin,
+                 const std::string& a_suffix,
+                 const std::string& a_prefix,
+                 const std::vector<std::string>& a_funcs,
                  const std::vector<function_args>& a_args,
-                 std::vector<inlib::plugin::procedure>& aProcs,
+                 std::vector<inlib::plugin::procedure>& a_procs,
                  const std::string& a_builder,
                  plugin_builder_func a_build_func){
-    aProcs.clear();
+    a_procs.clear();
     std::ostream& out = m_out;
-    inlib::plugin* _plugin = find_plugin(aPlugin);
+    inlib::plugin* _plugin = find_plugin(a_plugin);
     if(!_plugin) {
-      _plugin = new inlib::plugin(aPlugin,out,m_verbose_level?true:false,true); //true=quiet.
+      _plugin = new inlib::plugin(a_plugin,out,m_verbose_level?true:false,true); //true=quiet.
       if(!_plugin->is_opened()) {
         delete _plugin;
-        if(!a_build_func(aPlugin,aSuffix,aFuncs,a_args,a_builder,out)) return false;
-        _plugin = new inlib::plugin(aPlugin,out,m_verbose_level?true:false);
+        if(!a_build_func(a_plugin,a_suffix,a_funcs,a_args,a_builder,out)) return false;
+        _plugin = new inlib::plugin(a_plugin,out,m_verbose_level?true:false);
         if(!_plugin->is_opened()) {
           delete _plugin;
           return false;
         }
       }
       if(m_verbose_level) {
-        out << "function_manager::get_procs : load plugin for " << inlib::sout(aPlugin) << " done." << std::endl;
+        out << "function_manager::get_procs : load plugin for " << inlib::sout(a_plugin) << " done." << std::endl;
       }
       //execute("Initialize");
       m_plugins.push_back(_plugin);
     }
   
-    unsigned int funcn = aFuncs.size();
+    unsigned int funcn = a_funcs.size();
     for(unsigned int funci=0;funci<funcn;funci++) {
-      const std::string& funcName = aFuncs[funci];
-      std::string CNAME = aPrefix + funcName;
+      const std::string& funcName = a_funcs[funci];
+      std::string CNAME = a_prefix + funcName;
       inlib::plugin::procedure proc = _plugin->find(CNAME);
       if(proc) {
-        aProcs.push_back(proc);
+        a_procs.push_back(proc);
         if(m_verbose_level)
-          out << "get_C_function : function " << inlib::sout(funcName) << " found in " << inlib::sout(aPlugin) << std::endl;
+          out << "get_C_function : function " << inlib::sout(funcName) << " found in " << inlib::sout(a_plugin) << std::endl;
       } else {
         if(m_verbose_level)
-          out << "get_C_function : function " << inlib::sout(funcName) << " not found in " << inlib::sout(aPlugin) << std::endl;
-        aProcs.clear();
+          out << "get_C_function : function " << inlib::sout(funcName) << " not found in " << inlib::sout(a_plugin) << std::endl;
+        a_procs.clear();
         return false;
       }    
     }
@@ -1225,15 +1350,15 @@ protected:
     return false;
   }
 
-  static bool build_f77_dll(const std::string& aName,
-                            const std::string& aSuffix,
-                            const std::vector<std::string>& aFuncs,
+  static bool build_f77_dll(const std::string& a_name,
+                            const std::string& a_suffix,
+                            const std::vector<std::string>& a_funcs,
                             const std::vector<function_args>& a_args,
                             const std::string& a_builder,
                             std::ostream& a_out) {
-    //printf("debug : build_f77_dll : \"%s\"\n",aName.c_str());
+    //printf("debug : build_f77_dll : \"%s\"\n",a_name.c_str());
 
-    std::string CNAME = aName;
+    std::string CNAME = a_name;
     CNAME = std::string("gopaw_f77_wrap_") + CNAME;
     
     // Produce C frontend file :
@@ -1260,9 +1385,9 @@ protected:
   
     typedef unsigned int uint_t;
   
-    unsigned int funcn = aFuncs.size();
+    unsigned int funcn = a_funcs.size();
     for(unsigned int funci=0;funci<funcn;funci++) {
-      std::string funcName = aFuncs[funci];
+      std::string funcName = a_funcs[funci];
       unsigned int argn = a_args[funci].size();
   
       std::string sargs;
@@ -1290,7 +1415,7 @@ protected:
           svals += "]->get_"+what+"();";
         } else {
           a_out << "build_f77_dll :" 
-              << " for file " << inlib::sout(aName) 
+              << " for file " << inlib::sout(a_name) 
               << " can't handle variable type " << inlib::sout(v.stype()) 
               << "."
               << std::endl;
@@ -1310,12 +1435,13 @@ protected:
 
       ::fprintf(file,"\
   float %s%s%s(%s);\n\
-  %sbool gopaw_f77_wrap_%s(std::ostream&,const std::string&,const std::string&,const std::vector<inlib::value*>& a_args,inlib::value& a_return) {\n\
+  %sbool gopaw_f77_wrap_%s(std::ostream& a_out,const std::string& a_file,const std::string& a_model,const std::vector<inlib::value*>& a_args,inlib::value& a_return) {\n\
     %s\n\
     a_return.set(%s%s(%s));\n\
+    (void)a_out;(void)a_file;(void)a_model;(void)a_args;\n\
     return true;\n\
   }\n",s_stdcall.c_str(),funcName.c_str(),s_under.c_str(),sargs.c_str(),
-       s_declspec.c_str(),aFuncs[funci].c_str(),
+       s_declspec.c_str(),a_funcs[funci].c_str(),
        svals.c_str(),
        funcName.c_str(),s_under.c_str(),sargs2.c_str());
 
@@ -1331,21 +1457,22 @@ protected:
       a_out << "build_f77_dll : file " << inlib::sout(a_builder) << " not found." << std::endl;
       return false;
     }
-    _builder = inlib::file_system::quote(_builder);
+
+    inlib::quote(_builder);
   
     //FIXME : check ret status.
-    inlib::execute(a_out,_builder+" "+aName+" "+aSuffix+" "+CNAME);
+    inlib::std_system(a_out,_builder+" "+a_name+" "+a_suffix+" "+CNAME);
   
     return true;
   }
 
-  static bool build_C_plugin(const std::string& aName,
-                             const std::string& aSuffix,
-                             const std::vector<std::string>& aFuncs,
+  static bool build_C_plugin(const std::string& a_name,
+                             const std::string& a_suffix,
+                             const std::vector<std::string>& a_funcs,
                              const std::vector<function_args>& a_args,
                              const std::string& a_builder,
                              std::ostream& a_out){
-    std::string CNAME = aName;
+    std::string CNAME = a_name;
     CNAME = std::string("gopaw_cpp_wrap_") + CNAME;
     
     // Produce C frontend file :
@@ -1370,9 +1497,9 @@ protected:
   
     typedef unsigned int uint_t;
   
-    unsigned int funcn = aFuncs.size();
+    unsigned int funcn = a_funcs.size();
     for(unsigned int funci=0;funci<funcn;funci++) {
-      std::string funcName = aFuncs[funci];
+      std::string funcName = a_funcs[funci];
       unsigned int argn = a_args[funci].size();
   
       std::string sargs;
@@ -1399,7 +1526,7 @@ protected:
 	  inlib::numas(argi,svals);
           svals += "]->get_"+what+"();";
         } else {
-          a_out << "build_c_dll : for file " << inlib::sout(aName) 
+          a_out << "build_c_dll : for file " << inlib::sout(a_name) 
                 << " can't handle variable type " << inlib::sout(v.stype()) 
                 << "."
                 << std::endl;
@@ -1413,12 +1540,14 @@ protected:
   
       ::fprintf(file,"\
   double %s(%s);\n\
-  %sbool gopaw_cpp_wrap_%s(std::ostream&,const std::string&,const std::string&,const std::vector<inlib::value*>& a_args,inlib::value& a_return) {\n\
+  %sbool gopaw_cpp_wrap_%s(std::ostream& a_out,const std::string& a_file,const std::string& a_model,const std::vector<inlib::value*>& a_args,inlib::value& a_return) {\n\
     %s\n\
     a_return.set(%s(%s));\n\
+    (void)a_out;(void)a_file;(void)a_model;(void)a_args;\n\
     return true;\n\
   }\n",funcName.c_str(),sargs.c_str(),
-       s_declspec.c_str(),aFuncs[funci].c_str(),
+       s_declspec.c_str(),
+       a_funcs[funci].c_str(),
        svals.c_str(),
        funcName.c_str(),sargs2.c_str());
 
@@ -1435,10 +1564,10 @@ protected:
       return false;
     }
   
-    _builder = inlib::file_system::quote(_builder);
+    inlib::quote(_builder);
   
     //FIXME : check ret status.
-    inlib::execute(a_out,_builder+" "+aName+" "+aSuffix+" "+CNAME);
+    inlib::std_system(a_out,_builder+" "+a_name+" "+a_suffix+" "+CNAME);
   
     return true;
   }

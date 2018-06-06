@@ -14,6 +14,9 @@
 //#include <exlib/hdf5/header>
 #include <exlib/hdf5/h2file>
 #endif
+#ifdef APP_USE_CFITSIO
+#include <exlib/cfitsio>
+#endif
 
 namespace gopaw {
 
@@ -27,7 +30,27 @@ public:
 #ifdef APP_USE_HDF5
     ,HDF5_FILE = 4
 #endif
+#ifdef APP_USE_CFITSIO
+    ,FITS_FILE = 5
+#endif
   };
+  static bool type_to_string(Type a_type,std::string& a_s) {
+    switch(a_type) {
+    case           NONE:a_s = "NONE";            return true;
+    case       SYS_FILE:a_s = "SYS_FILE";        return true;
+    case READ_ROOT_FILE:a_s = "READ_ROOT_FILE";  return true;
+    case WRITE_ROOT_FILE:a_s = "WRITE_ROOT_FILE";return true;
+#ifdef APP_USE_HDF5
+    case      HDF5_FILE:a_s = "HDF5_FILE";       return true;
+#endif
+#ifdef APP_USE_CFITSIO
+    case      FITS_FILE:a_s = "FITS_FILE";       return true;
+#endif
+    default: a_s.clear();return false;
+    }
+    return false;
+  }
+public:  
   LUN()
   :m_type(NONE)
   ,m_string()
@@ -36,6 +59,9 @@ public:
   ,m_wroot_file(0)
 #ifdef APP_USE_HDF5
   ,m_hdf5_file(-1)
+#endif
+#ifdef APP_USE_CFITSIO
+  ,m_fits_file(0)
 #endif
   //
   ,m_is_meta(false)
@@ -56,6 +82,9 @@ public:
 #ifdef APP_USE_HDF5
   ,m_hdf5_file(-1)
 #endif
+#ifdef APP_USE_CFITSIO
+  ,m_fits_file(0)
+#endif
   ,m_is_meta(false)
   ,m_rroot_cur_dir(0)
   ,m_rroot_cur_dir_owner(false)
@@ -73,6 +102,9 @@ public:
   ,m_wroot_file(0)
 #ifdef APP_USE_HDF5
   ,m_hdf5_file(-1)
+#endif
+#ifdef APP_USE_CFITSIO
+  ,m_fits_file(0)
 #endif
   ,m_is_meta(false)
   ,m_rroot_cur_dir(&(a_file->dir()))
@@ -92,6 +124,9 @@ public:
 #ifdef APP_USE_HDF5
   ,m_hdf5_file(-1)
 #endif
+#ifdef APP_USE_CFITSIO
+  ,m_fits_file(0)
+#endif
   ,m_is_meta(false)
   ,m_rroot_cur_dir(0)
   ,m_rroot_cur_dir_owner(false)
@@ -109,11 +144,35 @@ public:
   ,m_rroot_file(0)
   ,m_wroot_file(0)
   ,m_hdf5_file(a_file)
+#ifdef APP_USE_CFITSIO
+  ,m_fits_file(0)
+#endif  
   ,m_is_meta(false)
   ,m_rroot_cur_dir(0)
   ,m_rroot_cur_dir_owner(false)
   ,m_hdf5_cur_dir(a_dir)
   ,m_hdf5_cur_dir_owner(a_dir_owner)
+  {}
+#endif
+
+#ifdef APP_USE_CFITSIO
+  LUN(const std::string& a_path,exlib::cfitsio::file* a_file)
+  :m_type(FITS_FILE)
+  ,m_string(a_path)
+  ,m_FILE(0)
+  ,m_rroot_file(0)
+  ,m_wroot_file(0)
+#ifdef APP_USE_HDF5
+  ,m_hdf5_file(-1)
+#endif  
+  ,m_fits_file(a_file)
+  ,m_is_meta(false)
+  ,m_rroot_cur_dir(0)
+  ,m_rroot_cur_dir_owner(false)
+#ifdef APP_USE_HDF5
+  ,m_hdf5_cur_dir(-1)
+  ,m_hdf5_cur_dir_owner(false)
+#endif  
   {}
 #endif
 
@@ -129,6 +188,9 @@ public:
   ,m_wroot_file(a_from.m_wroot_file)
 #ifdef APP_USE_HDF5
   ,m_hdf5_file(a_from.m_hdf5_file)
+#endif
+#ifdef APP_USE_CFITSIO
+  ,m_fits_file(a_from.m_fits_file)
 #endif
   ,m_is_meta(a_from.m_is_meta)
   ,m_rroot_cur_dir(a_from.m_rroot_cur_dir)
@@ -146,6 +208,9 @@ public:
     m_wroot_file = a_from.m_wroot_file;
 #ifdef APP_USE_HDF5
     m_hdf5_file = a_from.m_hdf5_file;
+#endif
+#ifdef APP_USE_CFITSIO
+    m_fits_file = a_from.m_fits_file;
 #endif
     m_is_meta = a_from.m_is_meta;
     m_rroot_cur_dir = a_from.m_rroot_cur_dir;
@@ -166,6 +231,9 @@ public:
     if(m_wroot_file!=a_from.m_wroot_file) return false;
 #ifdef APP_USE_HDF5
     if(m_hdf5_file!=a_from.m_hdf5_file) return false;
+#endif
+#ifdef APP_USE_CFITSIO
+    if(m_fits_file!=a_from.m_fits_file) return false;
 #endif
     return true;
   }  
@@ -201,6 +269,11 @@ public:
       if(m_hdf5_file!=(-1)) ::H5Fclose(m_hdf5_file);
       m_hdf5_file = (-1);
 #endif      
+#ifdef APP_USE_CFITSIO
+    } else if(m_type==FITS_FILE) {
+      if(m_fits_file) delete m_fits_file;
+      m_fits_file = 0;
+#endif      
     }
     m_type = LUN::NONE;
   }
@@ -212,6 +285,9 @@ public:
   inlib::wroot::file* m_wroot_file;
 #ifdef APP_USE_HDF5
   hid_t m_hdf5_file;
+#endif
+#ifdef APP_USE_CFITSIO
+  exlib::cfitsio::file* m_fits_file;
 #endif
   // not used in equal :
   bool m_is_meta;

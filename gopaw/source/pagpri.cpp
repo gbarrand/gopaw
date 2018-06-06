@@ -18,6 +18,12 @@ extern "C" {
 #include <inlib/mnmx>
 #include <inlib/arrout>
 
+#ifdef APP_USE_CFITSIO
+#include <exlib/fits_image>
+#include <inlib/picmap>
+#include "find_object"
+#endif
+
 void pagpri_(void* a_tag) { 
   gopaw::session& _sess = *((gopaw::session*)a_tag);
 
@@ -167,10 +173,13 @@ void pagpri_(void* a_tag) {
     bool smoothing,hinting;
     _sess.get_font("TFON",font,scale,smoothing,hinting);
 
+    float TWID = _sess.get_TWID(); //if Hershey. Used in examples/gopaw/lhcb_style.kumac.
+    
     _plotter.primitives_enforced = true;
     _plotter.add_primitive(
-       new inlib::sg::plottable_text(TEXT.c_str(),float(X),float(Y),float(SIZE),float(ANGLE),JUST,font.c_str(),gopaw::get_COL(TXCI),
-				     float(scale),smoothing?true:false,hinting?true:false));
+       new inlib::sg::plottable_text(TEXT.c_str(),float(X),float(Y),float(SIZE),float(ANGLE),JUST,
+				     font.c_str(),gopaw::get_COL(TXCI),
+				     float(scale),smoothing?true:false,hinting?true:false,TWID));
     
   } else if(cmd_path=="/GRAPHICS/PRIMITIVES/ITX") {
 
@@ -205,11 +214,13 @@ void pagpri_(void* a_tag) {
     bool smoothing,hinting;
     _sess.get_font("CFON",font,scale,smoothing,hinting);
 
+    float TWID = _sess.get_TWID(); //if Hershey. Used in examples/gopaw/lhcb_style.kumac.
+
     _plotter.primitives_enforced = true;
     _plotter.add_primitive
       (new inlib::sg::plottable_text
        (TEXT.c_str(),float(X),float(Y),float(SIZE),0,'L',font.c_str(),gopaw::get_COL(TXCI),
-	float(scale),smoothing?true:false,hinting?true:false));
+	float(scale),smoothing?true:false,hinting?true:false,TWID));
 
   } else if(cmd_path=="/GRAPHICS/PRIMITIVES/LABELS") {
 
@@ -279,6 +290,91 @@ void pagpri_(void* a_tag) {
       (new inlib::sg::plottable_box
        (float(X1),float(Y1),float(X2),float(Y2),
 	(inlib::sg::plottable_box::fill_area_style)FAIS,gopaw::get_COL(FACI),FASI,BORD?true:false,gopaw::get_COL(PLCI)));
+
+#ifdef APP_USE_CFITSIO
+  } else if(cmd_path=="/GRAPHICS/PRIMITIVES/IMAGE_HDU") {
+
+    //std::string FNAME = ku_gets();
+    int ihdu = ku_geti();
+    int islice = ku_geti();
+    double LMIN = ku_getr();
+    double LMAX = ku_getr();
+    std::string CMAP = ku_gets();
+    
+    double X = ku_getr();
+    double Y = ku_getr();
+    double WIDTH = ku_getr();
+    double HEIGHT = ku_getr();
+    double THETA = ku_getr();
+    double PHI = ku_getr();
+
+    if(_sess.verbose_level()) {
+      out << "pagpri : " << cmd_path
+	//<< " LUN= " << iLUN
+        //<< " FNAME= " << inlib::sout(FNAME) 
+          << " HDU= " << ihdu
+          << " SLICE= " << islice
+          << " LMIN= " << LMIN
+          << " LMAX= " << LMAX
+          << " CMAP= " << inlib::sout(CMAP)
+          << " X= " << X
+          << " Y= " << Y
+          << " WIDTH= " << WIDTH
+          << " HEIGHT= " << HEIGHT
+          << " THETA= " << THETA
+          << " PHI= " << PHI
+          << std::endl;
+    }
+    
+  //std::string sfile;
+  //inlib::file_name(FNAME,sfile); //to expand environment variables.
+
+    unsigned int hdu = ihdu<0?1:ihdu;
+    unsigned int slice = islice<0?0:islice;
+
+    std::string shdu;
+    if(!inlib::num2s(hdu,shdu)) {}
+    exlib::fits_image::img* fimg = image_find(_sess,shdu,slice);
+    if(!fimg) {
+      out << "pagpri : (hdu " << hdu << ", slice " << slice << ") not found." << std::endl;
+      return;
+    }
+
+    inlib::SOPI::cmap cmap(0);
+    if(!inlib::SOPI::stocmap(CMAP,cmap)) {
+      out << "pagpri : " << cmd_path << " :"
+          << " inlib::SOPI::stocmap(" << inlib::sout(CMAP) << ") failed."
+          << std::endl;
+      return;
+    }
+    if(_sess.verbose_level()) {
+      out << "pagpri : " << cmd_path << " : lut :"
+          << " LMIN= " << LMIN
+          << " LMAX= " << LMAX
+          << " NUM= " << cmap.size()
+          << std::endl;
+    }
+
+    inlib::lut<double> lut(LMIN,LMAX,cmap.size());
+    
+    inlib::img<inlib::byte> img;
+    bool yswap = false;
+  
+  //if(!exlib::fits_image::read_slice_to_img(out,sfile,hdu,slice,yswap,lut,cmap,img)) {
+    if(!exlib::fits_image::buffer2img(out,fimg->buffer(),fimg->width(),fimg->height(),fimg->bitpix(),yswap,lut,cmap,img)) {
+      out << "pagpri : " << cmd_path << " :"
+          << " exlib::fits_image::read_slice() failed." << std::endl;
+      return;
+    }
+
+    inlib::sg::plots* _page = _sess.find_plots(gopaw::s_current());
+    if(!_page) return;
+    inlib::sg::plotter& _plotter = _sess.page_plotter(*_page);
+
+    _plotter.primitives_enforced = true;
+    _plotter.add_primitive
+       (new inlib::sg::plottable_img(img,float(X),float(Y),float(WIDTH),float(HEIGHT),float(THETA),float(PHI)));    
+#endif
 
   } else {
     out << "pagpri :" 

@@ -72,6 +72,13 @@ void pazrz_(void* a_tag) {
         return;
       }
 #endif      
+#ifdef APP_USE_CFITSIO
+      if(_lun->m_fits_file) {
+        out << "pazrz : current working hdf5 directory = //LUN" << _sess.current_unit()
+	    << "/" << std::endl;
+        return;
+      }
+#endif      
       return;
     } 
 
@@ -143,6 +150,14 @@ void pazrz_(void* a_tag) {
           _lun->m_hdf5_cur_dir = dir;
           _lun->m_hdf5_cur_dir_owner = true;
         }
+        _sess.set_current_unit(unit);
+        return;
+      }
+#endif      
+#ifdef APP_USE_CFITSIO
+      if(_lun->m_fits_file) {
+        if(_sess.verbose_level()) out << "pazrz : " << cmd_path <<  " : is fits unit." << std::endl;
+        out << "pazrz : note : there is no directory in a fits file." << std::endl;
         _sess.set_current_unit(unit);
         return;
       }
@@ -220,6 +235,24 @@ void pazrz_(void* a_tag) {
         }
       }}
 #endif //APP_USE_HDF5
+
+#ifdef APP_USE_CFITSIO
+     {exlib::cfitsio::file* fits_file = 0;
+      if(_sess.find_current_fits_file(fits_file)) {
+        if(fits_file) {
+          typedef std::pair<unsigned int,std::string> id_t;
+          std::vector<id_t> ids;
+          if(!exlib::cfitsio::ls(out,*fits_file,ids)) {
+            out << "pazrz : exlib::cfitsio::ls() failed." << std::endl;
+            return;
+	  }
+	  inlib_vforcit(id_t,ids,it) {
+	    out << "hdu " << (*it).first << ", type " << (*it).second << std::endl;
+	  }
+          return;
+        }
+      }}
+#endif //APP_USE_CFITSIO
 
       out << "pazrz : current file not found." << std::endl;
       return;

@@ -99,6 +99,7 @@ int main(int argc,char** argv){
   }
 
   if(args.is_arg(inlib::s_arg_help())||args.is_arg("-h")) {
+  /*
     unsigned int linen;
     const char** lines = gopaw_help(linen);
     for(unsigned int index=0;index<linen;index++) {
@@ -107,14 +108,16 @@ int main(int argc,char** argv){
       inlib::replace(s,"@@back_slash@@","\\");
       std::cout << s << std::endl;
     }
+  */
+    std::cout << " See the gopaw section at https://gbarrand.github.io." << std::endl;
     return EXIT_SUCCESS;
   }
-
+  
  {std::vector<std::string> files;
   args.files(files);
   inlib_vforcit(std::string,files,it) {
     args.add("-kumac_file",*it,false);
-    args.remove(*it); //else it will be taken as a .onx file !
+    args.remove(*it);
   }}
 
   std::string arg0(argv[0]);
@@ -134,6 +137,16 @@ int main(int argc,char** argv){
   std::string fs = inlib::sep();
   std::string res_dir = up_exe_path+fs+"res";
   if(!inlib::env_append_path("EXLIB_FONT_PATH",res_dir+fs+"fonts")) return EXIT_FAILURE;
+  
+  inlib::put_env("GOPAW_RES_DIR",res_dir);
+
+  std::string tmp_dir;
+  if(!inlib::tmpdir(tmp_dir)) {
+    std::cout << "inlib::tmpdir() failed." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  inlib::put_env("GOPAW_TMP_DIR",tmp_dir);
   
   if(!inlib::isenv("KUIPPSVIEWER")) {
     // override what is in kuip/kuinit.c/Kuinit :
@@ -160,11 +173,6 @@ int main(int argc,char** argv){
 
   std::string data_dir = doc_dir;
   std::string out_dir = doc_dir;
-  std::string tmp_dir;
-  if(!inlib::tmpdir(tmp_dir)) {
-    std::cout << "inlib::tmpdir() failed." << std::endl;
-    return EXIT_FAILURE;
-  }
 
   std::string file = res_dir;
   file += inlib::sep();    

@@ -566,7 +566,10 @@ public: //base_func
               a_value = 0;
               return false;
             }
-            args.push_back(new imp_value_t(inlib::vec_data(va)));ai++;
+          //args.push_back(new imp_value_t(inlib::vec_data(va)));ai++;
+            imp_value_t* _value = new imp_value_t(inlib::vec_data(va));
+	    _value->set_itag((unsigned int)va.size()); //for py_wrap_func.
+            args.push_back(_value);ai++;
 	  } else {
             m_out << "compiled::value : not sufficient data to fill DOUBLE_STAR argument."
                   << " Codelet is " << inlib::sout(m_codelet) << "." << std::endl;
@@ -639,7 +642,7 @@ public: //base_func
   }
 
 public:
-  compiled(std::ostream& a_out,const hbook& a_hbook,void* a_tag,gopaw::ifunction* aFunction)
+  compiled(std::ostream& a_out,const hbook& a_hbook,void* a_tag,gopaw::ifunction* a_function)
   :parent()
   ,m_out(a_out)
   ,m_hbook(a_hbook)
@@ -647,11 +650,11 @@ public:
   ,m_func(0)
   ,m_retain_arrays(false)
   {
-    //NOTE : we do NOT take ownership of aFunction.
-    if(!initialize(aFunction,m_arrays,false)) {}
+    //NOTE : we do NOT take ownership of a_function.
+    if(!initialize(a_function,m_arrays,false)) {}
   }
 
-  compiled(std::ostream& a_out,const hbook& a_hbook,void* a_tag,gopaw::ifunction* aFunction,
+  compiled(std::ostream& a_out,const hbook& a_hbook,void* a_tag,gopaw::ifunction* a_function,
            const std::vector<array_t*>& aArrays,bool a_retain_arrays)
   :parent()
   ,m_out(a_out)
@@ -660,8 +663,8 @@ public:
   ,m_func(0)
   ,m_retain_arrays(false)
   {
-    //NOTE : we do NOT take ownership of aFunction.
-    if(!initialize(aFunction,aArrays,a_retain_arrays)) {}
+    //NOTE : we do NOT take ownership of a_function.
+    if(!initialize(a_function,aArrays,a_retain_arrays)) {}
   }
 
   virtual ~compiled() {
@@ -718,19 +721,19 @@ private:
     a_args.clear();
   }
 
-  bool initialize(gopaw::ifunction* aFunction,const std::vector<array_t*>& aArrays,bool a_retain_arrays) {
-    if(!aFunction) {
+  bool initialize(gopaw::ifunction* a_function,const std::vector<array_t*>& aArrays,bool a_retain_arrays) {
+    if(!a_function) {
       m_out << "compiled::initialize : null gopaw::ifunction* given." << std::endl;
       return false;
     }
-    if(aFunction->numberOfParameters()>aFunction->dimension()) {
+    if(a_function->numberOfParameters()>a_function->dimension()) {
       m_out << "compiled::initialize :"
-          << " for model " << inlib::sout(aFunction->model())
-          << " in file " << inlib::sout(aFunction->file())
-  //        << " with signature " << inlib::sout(aFunction->signature())
+          << " for model " << inlib::sout(a_function->model())
+          << " in file " << inlib::sout(a_function->file())
+  //        << " with signature " << inlib::sout(a_function->signature())
           << ", dimension mismatch"
-          << " parameters = " << aFunction->numberOfParameters() 
-          << " > dimension = " << aFunction->dimension()
+          << " parameters = " << a_function->numberOfParameters() 
+          << " > dimension = " << a_function->dimension()
           << "."
           << std::endl;
       return false;
@@ -748,8 +751,8 @@ private:
       m_retain_arrays = false;
     }
   
-    unsigned int parn = aFunction->numberOfParameters();
-    unsigned int varn = aFunction->dimension()-parn;
+    unsigned int parn = a_function->numberOfParameters();
+    unsigned int varn = a_function->dimension()-parn;
     unsigned int an = m_arrays.size();    
     if(an) varn -= an;
   
@@ -774,11 +777,11 @@ private:
     // For the second separator, we can't take ':', since
     // it is part of the file path syntax on Windows (drive separator).
   
-    m_func = aFunction;
+    m_func = a_function;
   
-    m_model = aFunction->model();
-    m_file = aFunction->file();
-    //m_signature = aFunction->signature();
+    m_model = a_function->model();
+    m_file = a_function->file();
+    //m_signature = a_function->signature();
     m_codelet = "compiled:" + m_model + ";" + m_file;
 
     return true;

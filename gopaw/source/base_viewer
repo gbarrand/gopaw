@@ -6,15 +6,9 @@
 
 #include "iui"
 
-#include <exlib/sg/gl2ps_action>
-
-#include <exlib/jpeg>
-#include <exlib/png>
-#include <exlib/sg/text_freetype>
+#include <exlib/sg/write_paper>
 
 #include <inlib/sg/ortho>
-#include <inlib/sg/zb_action>
-#include <inlib/wps>
 
 namespace gopaw {
 
@@ -24,88 +18,9 @@ public:
   virtual bool size(unsigned int& a_w,unsigned int& a_h) {a_w = m_width;a_h = m_height;return true;}
   virtual bool write(const std::string& a_file,const std::string& a_format,const std::string& /*a_opts*/ = "") {
     if(!m_scene_graph) return false;
-    if(!m_width || !m_height) return false;
-    if(a_format=="GL2PS_EPS") {
-      exlib::sg::gl2ps_action action(m_gl2ps_mgr,m_out,m_width,m_height);
-      if(!action.open(a_file,GL2PS_EPS)) return false;
-      m_scene_graph->render(action);
-      action.close();
-    } else if(a_format=="GL2PS_PS") {
-      exlib::sg::gl2ps_action action(m_gl2ps_mgr,m_out,m_width,m_height);
-      if(!action.open(a_file,GL2PS_PS)) return false;
-      m_scene_graph->render(action);
-      action.close();
-    } else if(a_format=="GL2PS_PDF") {
-      exlib::sg::gl2ps_action action(m_gl2ps_mgr,m_out,m_width,m_height);
-      if(!action.open(a_file,GL2PS_PDF)) return false;
-      m_scene_graph->render(action);
-      action.close();
-    } else if(a_format=="GL2PS_SVG") {
-      exlib::sg::gl2ps_action action(m_gl2ps_mgr,m_out,m_width,m_height);
-      if(!action.open(a_file,GL2PS_SVG)) return false;
-      m_scene_graph->render(action);
-      action.close();
-    } else if(a_format=="GL2PS_TEX") {
-      exlib::sg::gl2ps_action action(m_gl2ps_mgr,m_out,m_width,m_height);
-      if(!action.open(a_file,GL2PS_TEX)) return false;
-      m_scene_graph->render(action);
-      action.close();
-    } else if(a_format=="GL2PS_PGF") {
-      exlib::sg::gl2ps_action action(m_gl2ps_mgr,m_out,m_width,m_height);
-      if(!action.open(a_file,GL2PS_PGF)) return false;
-      m_scene_graph->render(action);
-      action.close();
-      
-    } else {
-      inlib::sg::zb_action action(m_zb_mgr,m_out,m_width,m_height);
-      inlib::colorf clear_color = inlib::colorf_white();
-      action.zbuffer().clear_color_buffer(0);
-      action.add_color(clear_color.r(),clear_color.g(),clear_color.b());
-      action.zbuffer().clear_depth_buffer();    
-      m_scene_graph->render(action);
-      if(a_format=="INZB_PS") {
-        inlib::wps wps(m_out);
-        if(!wps.open_file(a_file)) {
-          m_out << "gopaw::base_viewer::write : can't open " << a_file << "." << std::endl;
-          return false;
-        }
-        wps.PS_BEGIN_PAGE();
-        wps.PS_PAGE_SCALE(float(m_width),float(m_height));
-        wps.PS_IMAGE(m_width,m_height,inlib::wps::rgb_4,inlib::sg::zb_action::get_rgb,&action);
-        wps.PS_END_PAGE();
-        wps.close_file();
-      
-      } else {
-        inlib::byte* buffer = new inlib::byte[3*m_width*m_height];
-       {inlib::sg::zb_action::VCol r,g,b;
-        inlib::byte* pos = buffer;
-        for(int row=m_height-1;row>=0;row--) {
-        for(unsigned int col=0;col<m_width;col++) {
-          inlib::sg::zb_action::get_rgb(&action,col,row,r,g,b);
-          *pos = inlib::byte(255.0f*r);pos++;
-          *pos = inlib::byte(255.0f*g);pos++;
-          *pos = inlib::byte(255.0f*b);pos++;
-         }}}
-  
-        if(a_format=="INZB_JPEG") {
-          if(!exlib::jpeg::write(m_out,a_file,buffer,m_width,m_height,3,100)) {
-            m_out << "gopaw::base_viewer::write : exlib::jpeg::write() failed." << std::endl;
-            delete [] buffer;
-            return false;
-          }
-        } else if(a_format=="INZB_PNG") {
-          if(!exlib::png::write(m_out,a_file,buffer,m_width,m_height,3)) {
-            m_out << "gopaw::base_viewer::write : exlib::png::write() failed." << std::endl;
-            delete [] buffer;
-            return false;
-          }
-        } else {
-          m_out << "gopaw::base_viewer::write : unknown format " << a_format << std::endl;
-	}
-        delete [] buffer;
-      }
-    }
-    return true;
+    float r,g,b,a;get_background_color(r,g,b,a);
+    return exlib::sg::write_paper(m_out,m_gl2ps_mgr,m_zb_mgr,r,g,b,a,
+                                  *m_scene_graph,m_width,m_height,a_file,a_format);
   }
 public:
   base_viewer(std::ostream& a_out,unsigned int a_width,unsigned int a_height)

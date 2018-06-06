@@ -331,6 +331,7 @@ void pahist_(void* a_tag) {
 
     if(_sess.verbose_level()) {
       out << "pahist : " << cmd_path
+          << " LUN= " << iLUN
           << " FNAME= " << inlib::sout(FNAME) 
           << " CHOPT= " << inlib::sout(CHOPT) 
           << std::endl;
@@ -377,6 +378,9 @@ void pahist_(void* a_tag) {
           delete root_file;
           return;
         } 
+        if(_sess.verbose_level()) {
+          out << "pahist : " << cmd_path << " file " << inlib::sout(sfile) << " is a root file." << std::endl;
+        }
         _sess.add_LUN_rroot_file(uLUN,root_file);
         _sess.set_current_unit(uLUN);
         return;
@@ -393,12 +397,38 @@ void pahist_(void* a_tag) {
         }
         _sess.add_LUN_hdf5_file(uLUN,sfile,hdf5_file,hdf5_file,false);
         _sess.set_current_unit(uLUN);
+        if(_sess.verbose_level()) {
+          out << "pahist : " << cmd_path << " file " << inlib::sout(sfile) << " is an hdf5 file." << std::endl;
+        }
         return;
 #else	
         out << "pahist : can't open " << inlib::sout(sfile)
             << ". File is an hdf5 file, but gopaw not compiled with -DAPP_USE_HDF5." << std::endl;
         return;
 #endif //APP_USE_HDF5
+      }}
+     
+     {bool is;
+      inlib::file::is_fits(sfile,is);
+      if(is) {
+#ifdef APP_USE_CFITSIO
+	exlib::cfitsio::file* ffile = new exlib::cfitsio::file(out);
+        if(!ffile->open(sfile)) {
+          out << "pahist : can't open " << inlib::sout(sfile) << std::endl;
+	  delete ffile;
+          return;
+        }
+        _sess.add_LUN_fits_file(uLUN,sfile,ffile);
+        _sess.set_current_unit(uLUN);
+        if(_sess.verbose_level()) {
+          out << "pahist : " << cmd_path << " file " << inlib::sout(sfile) << " is a fits file." << std::endl;
+        }
+        return;
+#else	
+        out << "pahist : can't open " << inlib::sout(sfile)
+            << ". File is a fits file, but gopaw not compiled with -DAPP_USE_CFITSIO." << std::endl;
+        return;
+#endif //APP_USE_CFITSIO
       }}
      
       inlib::aida::ntuple* aida_tuple;
@@ -415,8 +445,15 @@ void pahist_(void* a_tag) {
         inlib::nosuffix(IDN,IDN);}
 
         _sess.add_handle(IDN,aida_tuple);
-      //_sess.add_LUN_hippo_file(uLUN,sfile);
-      //_sess.set_current_file(sfile);
+
+        _sess.add_LUN_SYS_FILE(uLUN,sfile,0); //declare anyway a unit to quiet /FORTRAN/CLOSE.
+        _sess.set_current_unit(uLUN);
+	
+        if(_sess.verbose_level()) {
+          out << "pahist : " << cmd_path << " file " << inlib::sout(sfile) << " is an hippodraw file." << std::endl;
+          out << "pahist :  ntuple title " << inlib::sout(aida_tuple->title()) << "." << std::endl;
+          out << "pahist :  #columns " << aida_tuple->columns() << std::endl;
+        }
         return;
       }
 
@@ -456,8 +493,7 @@ void pahist_(void* a_tag) {
     //inlib::touppercase(HLIST);
     if(HLIST=="0") HLIST = "*";
 
-    std::string::size_type star = HLIST.find('*');
-    if(star==std::string::npos){
+    if(HLIST.find('*')==std::string::npos){
       std::string NAME = HLIST;
       if(!_sess.remove_handle(NAME)) { //ok
         out << "pahist : unable to remove " << inlib::sout(NAME) << std::endl;

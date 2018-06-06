@@ -39,7 +39,6 @@ void papict_(void* a_tag) {
     double VALUE = ku_getr();
     inlib::touppercase(CHATT);
 
-    int cat;
     if(CHATT=="SHOW") {  
 
       std::ostream& out = _sess.out();
@@ -55,17 +54,24 @@ void papict_(void* a_tag) {
 
       out << "papict : " << inlib::sout(CHATT) << " is not an attribute." << std::endl;
 
-    } else if(!atts.category(CHATT,cat)||(cat!=gopaw::cat_IGSET())) {
-
-      out << "papict : " << inlib::sout(CHATT) << " is not an IGSET attribute." << std::endl;
-
     } else {
-
-      if(VALUE==0) VALUE = atts.default_value(CHATT); //PAW convention.
-      atts.set_value(CHATT,VALUE);
- 
+      int category;
+      if(!atts.category(CHATT,category)) {}
+      if(category==gopaw::cat_IGSET()) {
+        // see also pagraf SET command.
+        // it seems that the IGSET atts do not conform to the "0=default" logic except
+        // CSHI, BARW (existing in HPLSET) and NCOL :
+        if((CHATT=="CSHI") ||
+           (CHATT=="BARW") ||
+           (CHATT=="NCOL") ){
+          if(VALUE==0) VALUE = atts.default_value(CHATT); //PAW convention.
+        }
+        atts.set_value(CHATT,VALUE);
+      } else {
+        out << "papict : " << inlib::sout(CHATT) << " is not an IGSET attribute." << std::endl;
+      }
     }
-
+    
   } else if(cmd_path=="/PICTURE/PRINT") {
 
     std::string FILE = ku_gets();
@@ -136,7 +142,7 @@ void papict_(void* a_tag) {
       //    sh> HIGZPRINTER='lp -dprinter_name paw.ps';export HIGZPRINTER
       std::string HIGZPRINTER;
       if(inlib::getenv("HIGZPRINTER",HIGZPRINTER)) {
-        inlib::execute(out,HIGZPRINTER);
+        inlib::std_system(out,HIGZPRINTER);
       }
     }
 

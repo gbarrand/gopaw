@@ -242,6 +242,7 @@ bool gopaw_kuip_exec(std::ostream& a_out,const std::string& a_string){
   //  if(::ku_exec((char*)text[index].c_str())) return false;
   //}
   //return true;
+  if(a_string.empty()) return true;
   //int status =
   ::ku_exec(a_string.c_str());
   //if(status!=0) { //status not the same on Macos, Windows, Android.
@@ -260,6 +261,7 @@ bool gopaw_kuip_exec_no_help(std::ostream& a_out,const std::string& a_string){
   //}
   //return true;
   //int status =
+  if(a_string.empty()) return true;
   ::ku_exec_no_help(a_string.c_str());
   //if(status!=0) { //status not the same on Macos, Windows, Android.
   //  a_out << "gopaw_kuip_exec : ku_exec_no_help(" << inlib::sout(a_string) << "). status " << status << "." << std::endl;

@@ -83,6 +83,8 @@ inline bool root2aida(std::ostream& a_out,inlib::rroot::tree& a_tree,inlib::aida
   std::vector<root_fcol_t*> root_fcols;
   typedef inlib::read::icolumn<double> root_dcol_t;
   std::vector<root_dcol_t*> root_dcols;
+  typedef inlib::read::icolumn<int> root_icol_t;
+  std::vector<root_icol_t*> root_icols;
 
   typedef inlib::aida::aida_col<double> aida_col_t;
   std::vector<aida_col_t*> aida_cols;
@@ -92,6 +94,7 @@ inline bool root2aida(std::ostream& a_out,inlib::rroot::tree& a_tree,inlib::aida
     if(root_col) {
       root_fcols.push_back(0);
       root_dcols.push_back(root_col);
+      root_icols.push_back(0);
       aida_cols.push_back(aida_tuple->create_col<double>(root_col->name()));
       continue;
    }}
@@ -99,6 +102,15 @@ inline bool root2aida(std::ostream& a_out,inlib::rroot::tree& a_tree,inlib::aida
     if(root_col) {
       root_fcols.push_back(root_col);
       root_dcols.push_back(0);
+      root_icols.push_back(0);
+      aida_cols.push_back(aida_tuple->create_col<double>(root_col->name()));
+      continue;
+    }}
+   {root_icol_t* root_col = inlib::id_cast<inlib::read::icol,root_icol_t>(*(*it));    
+    if(root_col) {
+      root_fcols.push_back(0);
+      root_dcols.push_back(0);
+      root_icols.push_back(root_col);
       aida_cols.push_back(aida_tuple->create_col<double>(root_col->name()));
       continue;
     }}
@@ -117,6 +129,7 @@ inline bool root2aida(std::ostream& a_out,inlib::rroot::tree& a_tree,inlib::aida
 
   float fvalue;
   double dvalue;
+  int ivalue;
   bool status;
 
   ntu.start();
@@ -141,6 +154,17 @@ inline bool root2aida(std::ostream& a_out,inlib::rroot::tree& a_tree,inlib::aida
           break;
         }
         if(!aida_cols[coli]->fill(dvalue)) {
+          a_out << "root2aida : aida_col fill failed." << std::endl;
+          status = false;
+          break;
+        }
+      } else if(root_icols[coli]) {
+        if(!root_icols[coli]->get_entry(ivalue)) {
+          a_out << "root2aida : root_icol.get_entry() failed." << std::endl;
+          status = false;
+          break;
+        }
+        if(!aida_cols[coli]->fill(double(ivalue))) {
           a_out << "root2aida : aida_col fill failed." << std::endl;
           status = false;
           break;

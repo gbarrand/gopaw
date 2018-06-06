@@ -69,11 +69,21 @@ inline bool read(std::ostream& a_out,read_func_t a_func,void* a_tag,inlib::aida:
 
   ds.resize(coln);
   bool status;
-  
+
+  size_t count = 0;
   while(true) {
     if(!a_func(a_tag,buffer,sizeof(buffer),l)) break; //EOF.
   
-    inlib::cstring_strtods(buffer,ds,true); //the last true is important.
+    size_t nd = inlib::cstring_strtods(buffer,ds,true); //the last true is important.
+    
+    if(nd!=coln) {
+      a_out << "read_hippo : read row : " << count
+            << " : mismatch number of data (" << ds.size() << ") versus #columns (" << coln << ")."
+	    << std::endl;
+      delete a_tuple;
+      a_tuple = 0;
+      return false;
+    }
 
     status = true;
     for(size_t coli=0;coli<coln;coli++) {
@@ -83,6 +93,7 @@ inline bool read(std::ostream& a_out,read_func_t a_func,void* a_tag,inlib::aida:
         break;
       }
     }
+    
     if(!status || !a_tuple->add_row()) {
       a_out << "read_hippo : ntuple fill failed." << std::endl;
       delete a_tuple;
@@ -90,6 +101,7 @@ inline bool read(std::ostream& a_out,read_func_t a_func,void* a_tag,inlib::aida:
       return false;
     }
 
+    count++;
   }
   
   return true;

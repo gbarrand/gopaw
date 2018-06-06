@@ -72,7 +72,22 @@ static bool set_att(gopaw::session& a_session,atts_t& a_atts,const std::string& 
 
     double old_VALUE = a_atts.value(a_CHATT);
 
-    if(a_VALUE==0) a_VALUE = a_atts.default_value(a_CHATT); //PAW convention.
+    int category;
+    if(!a_atts.category(a_CHATT,category)) {}
+    if(category==gopaw::cat_IGSET()) {
+      // see also papict IGSET command.
+      // it seems that the IGSET atts do not conform to the "0=default" logic except
+      // CSHI, BARW (existing in HPLSET) and NCOL :
+      if((a_CHATT=="CSHI") ||
+	 (a_CHATT=="BARW") ||
+	 (a_CHATT=="NCOL") ){
+        if(a_VALUE==0) a_VALUE = a_atts.default_value(a_CHATT); //PAW convention.
+      }
+    } else {
+      if(a_VALUE==0) a_VALUE = a_atts.default_value(a_CHATT); //PAW convention.
+    }
+
+    
     a_atts.set_value(a_CHATT,a_VALUE);
 
     if( (a_CHATT=="XSIZ") ||
@@ -160,6 +175,10 @@ void pagraf_(void* a_tag) {
       out << "|                        IGSET : Current values in use                         |" << std::endl;
       _sess.showATTs(out,gopaw::cat_IGSET());
 
+      out << "+------------------------------------------------------------------------------+" << std::endl;
+      out << "|                        GOPAW : Current values in use                         |" << std::endl;
+      _sess.showATTs(out,gopaw::cat_GOPAW_SET());
+
     } else if(CHATT=="*") { 
 
       atts.set_all_to_default();
@@ -229,20 +248,22 @@ void pagraf_(void* a_tag) {
 
         opts.set_value(key,CHOPTN);
  
-        if( (CHOPTN=="NGRI") || (CHOPTN=="GRID")) {
+               if( (CHOPTN=="NGRI") || (CHOPTN=="GRID")) {
         } else if( (CHOPTN=="BOX") || (CHOPTN=="NBOX")) {
         } else if( (CHOPTN=="HTIT") || (CHOPTN=="UTIT")) {
         } else if( (CHOPTN=="NSTA") || (CHOPTN=="STA")) {
         } else if( (CHOPTN=="NBAR") || (CHOPTN=="BAR")) {
-        } else if( (CHOPTN=="COLL") || (CHOPTN=="COLV")) {
         } else if( (CHOPTN=="LINX") || (CHOPTN=="LOGX")) {
         } else if( (CHOPTN=="LINY") || (CHOPTN=="LOGY")) {
         } else if( (CHOPTN=="LINZ") || (CHOPTN=="LOGZ")) {
         } else if( (CHOPTN=="NFIT") || (CHOPTN=="FIT")) {
 
         //gopaw :
+        } else if( (CHOPTN=="COLL") || (CHOPTN=="COLV")) {
         } else if( (CHOPTN=="PTIT") || (CHOPTN=="RTIT")) {
+        } else if( (CHOPTN=="PSTA") || (CHOPTN=="RSTA")) {
         } else if( (CHOPTN=="NBAC") || (CHOPTN=="BACK")) {
+        } else if( (CHOPTN=="BGRD") || (CHOPTN=="NBGR")) {
  
         } else {
           out << "pagraf :" 
