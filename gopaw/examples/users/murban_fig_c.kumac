@@ -1,11 +1,17 @@
-* GB : use TTF fonts (same indexing as ROOT)
+*/////////////////////////////////////////////////////////////////////
+*/// G.Barrand : use ttf (freetype) fonts for axes values (VFON).
+*///  The indexing is the same as ROOT (sure, same genetic).
+*///  (2 = hershey).
+*///  But we do not use them where there are PAW encoding (CFON)
+*///  which is not (yet) ready with ttf.
+*/////////////////////////////////////////////////////////////////////
 set VFON 62
-set GFON 62
-set TFON 62
-set CFON 62
-set LFON 62
+*set CFON 62
+*/////////////////////////////////////////////////////////////////////
+
 opt UTIT
 opt RTIT
+title_global 'Group refractivity for Air' U
 
 *GB
 set MSCF 2

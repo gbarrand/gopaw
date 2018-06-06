@@ -18,6 +18,12 @@ render
 synchronize
 wait 'wait...' 2
 
+mess "fabry_py.kumac..."
+exec fabry_py.kumac
+render
+synchronize
+wait 'wait...' 2
+
 mess "hpwellish.kumac..."
 exec hpwellish.kumac
 render
@@ -30,8 +36,20 @@ render
 synchronize
 wait 'wait...' 2
 
+mess "lsimard_py.kumac..."
+exec lsimard_py.kumac
+render
+synchronize
+wait 'wait...' 2
+
 mess "murban_fig_c.kumac..."
 exec murban_fig_c.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "murban_fig_py.kumac..."
+exec murban_fig_py.kumac
 render
 synchronize
 wait 'wait...' 2
@@ -48,8 +66,16 @@ render
 synchronize
 wait 'wait...' 2
 
-mess "oblique.kumac..."
-exec oblique_c.kumac
+mess "oblique_c.kumac..."
+exec oblique_py.kumac
+render
+synchronize
+wait 'wait...' 2
+opt ngri
+opt nsta
+
+mess "oblique_py.kumac..."
+exec oblique_py.kumac
 render
 synchronize
 wait 'wait...' 2

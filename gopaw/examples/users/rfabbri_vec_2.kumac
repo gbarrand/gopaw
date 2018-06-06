@@ -15,7 +15,7 @@ mess **********************************************************
 mess  '==> Reading from an input file vectors: help VECTOR/READ'
 mess **********************************************************
 VECTOR/READ pTDC1P,mTDC1P,dTDC1P,pTDC1M,mTDC1M,dTDC1M _
-Channel1.dat 'F7.1,1X,F7.1,1X,F7.1,1X,F7.1,1X,F7.1,1X,F7.1' 'OC'
+data_Channel1.dat 'F7.1,1X,F7.1,1X,F7.1,1X,F7.1,1X,F7.1,1X,F7.1' 'OC'
 render
 wait ! [SLEEP_TIME]
 

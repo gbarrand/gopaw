@@ -1,9 +1,3 @@
-* GB : use TTF fonts (same indexing as ROOT)
-set VFON 62
-set GFON 62
-set TFON 62
-set CFON 62
-set LFON 62
 opt UTIT
 
 * GB :

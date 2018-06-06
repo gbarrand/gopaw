@@ -6,7 +6,7 @@ exec alldef
 zone 3 2
 *zone 1 1
 ntuple/create 1 'H.P.Wellish test' 2 ! ! e x
-ntuple/read 1 hpwellish.dat
+ntuple/read 1 data_hpwellish.dat
 
 opt stat
 * OURMEI

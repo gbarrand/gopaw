@@ -11,7 +11,7 @@ ve/cr erun(100000) r 100000*0.
 ve/cr act(100000) r 100000*0.
 ve/cr eact(100000) r 100000*0.
 
-for/call read.c([i])
+for/call cread.c([i])
 
 
   fo/fil 4 act_run_[i].eps; meta 4 -113

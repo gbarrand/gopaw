@@ -4,7 +4,7 @@
       INTEGER I,J,K,IRU
       REAL AC,EAC
 
-      OPEN(11,FILE='activite_radon_gas_trace_info')
+      OPEN(11,FILE='data_activite_radon_gas_trace.dat')
  
       I = 0
 
@@ -21,7 +21,7 @@ C        PRINT*,' Lecture : IRU ',IRU,' AC ',AC,' EAC ',EAC
 C        PRINT*,' J ',J,' RUN(J) ',RUN(J),' ACT(J) ',ACT(J),
 C     &' EACT(J) ',EACT(J)
       ENDDO  
- 98   PRINT*,'Erreur de lecture de activite_radon_gas_trace_info'
+ 98   PRINT*,'Erreur de lecture de data_activite_radon_gas_trace.dat'
       STOP
 
  99   CLOSE(11)

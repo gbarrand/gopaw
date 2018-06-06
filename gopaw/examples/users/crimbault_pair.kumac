@@ -13,11 +13,11 @@ nt/cut 5 abs(e).gt.0.005
 opt linx
 opt liny
 nt/create 1 '' 4 ! ! e vx vy vz 
-*nt/read 1 secondariesa.dat
-nt/read 1 secondaries.dat
+*nt/read 1 data_secondariesa.dat
+nt/read 1 data_secondaries.dat
 
 nt/create 2 '' 4 ! ! e vx vy vz 
-nt/read 2 secondaries.dat
+nt/read 2 data_secondaries.dat
 set hwid 10
 set hcol 1
 nt/pl 2.log10(abs(e))

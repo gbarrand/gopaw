@@ -35,7 +35,7 @@ palette 1
 * the LCG ROOT-3.10.02/h2root run on lxplus.
 * The hists had been renamed h<ID>.
 
-h/file 1 sstudeny.root
+h/file 1 data_sstudeny.root
 
 sleep_time = 1
 

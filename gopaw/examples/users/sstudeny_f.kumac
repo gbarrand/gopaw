@@ -26,10 +26,7 @@ set bwid 7
 set ncol 50
 palette 1    
 
-* to get the sstudeny.hbook, you can do :
-*  OS> wget http:\/\/OpenScientist.lal.in2p3.fr/download/data/sstudeny.hbook
-
-h/file 1 sstudeny.hbook
+h/file 1 data_sstudeny.hbook
 
 set xsiz 15.0 
 set ysiz 15.0

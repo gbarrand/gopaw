@@ -1,7 +1,7 @@
 nt/create 1 '' 6 ! ! e x y z vx vy
-nt/read 1 beama.dat
+nt/read 1 data_beama.dat
 nt/create 2 '' 6 ! ! e x y z vx vy
-nt/read 2 beamb.dat
+nt/read 2 data_beamb.dat
 
 opt nbox
 opt utitle
