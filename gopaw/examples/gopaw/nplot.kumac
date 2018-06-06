@@ -1,0 +1,18 @@
+MACRO nplot
+**************************************************************************
+* Creation of a tuple. Plot with expression.                             *
+**************************************************************************
+exec alldef
+ntuple/create 10 'Simple tuple' 2 ' ' !  A B
+ntuple/read 10 optuple.dat
+ntuple/print 10
+zone 2 2
+set mtyp 29
+ntuple/plot 10.B%A
+ntuple/plot 10.B/2%A
+ntuple/cut $1 2*B
+ntuple/plot 10.A-$1
+close 10
+zone
+hi/de 10
+RETURN

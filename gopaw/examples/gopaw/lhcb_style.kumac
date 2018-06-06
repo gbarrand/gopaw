@@ -1,0 +1,51 @@
+macro lhcb_style
+
+* Example kumac for demonstrating the use of lhcbstyle.kumac.
+* Simple Gauss distribution with fit.
+   
+   exec lhcb_def.kumac
+   
+* optionally, switch on stat and fit boxes:
+* opt stat; set stat 1110
+* opt fit;  set fit 1011
+
+   1d 10 'invariant mass' 40 5200. 5400.
+ 
+   mean = 5280.
+   sigma = 17.
+
+   nev = 1000
+   do j=1,[nev]
+     n = 100
+     *vec/del a
+     sigma a = array([n],-1#1)
+     sigma b = 2.*rndm(a)-1.
+     sigma c = vsum(b)
+     s = $sigma(vsum(b))
+     scale = $sigma(sqrt(3.0/[n]))
+     s = [mean]+[sigma]*[scale]*[s]
+     call hfill(10,[s],0.,1.)
+   enddo
+
+   hist/fit 10 'g'
+   set htyp 354
+   hist/set/max 10 140.
+
+   hist/plot 10
+*** for error bars :
+*   hist/plot 10 e
+*** without fit curve :
+*   hist/plot 10 hist
+
+   atit 'm(K^+![p]^-!) "M#GeV/c^2!"N#' 'Entries'	   
+   tick
+
+   set chhe 1.1
+   itx 5330. 118. 'LHCb'    
+   set chhe 0.5
+   itx 5335. 100. 'B?d! "5# K^+![p]^-!'
+   itx 5325.  90. 'final selection'
+
+   pic/print testLhcbStylePAW.eps
+
+return

@@ -1,0 +1,86 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file inlib.license for terms.
+
+#ifndef inlib_file_system
+#define inlib_file_system
+
+// used in osc packages.
+
+#include <string>
+#include <cstdlib>
+
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
+namespace inlib {
+namespace file_system {
+
+inline std::string quote(const std::string& a_path) {
+  if(a_path.find(' ')==std::string::npos) return a_path;
+  // path with spaces :
+  if(a_path[0]=='"') return a_path; //Already in double quote.
+  return std::string("\"")+a_path+"\"";
+}
+
+// used in OnX/BaseUI.
+inline bool mv(const std::string& a_from,const std::string& a_to){
+  if(a_to==a_from) return true;
+#if TARGET_OS_IPHONE
+  return false;
+#else
+#ifdef _WIN32
+  std::string cmd = "MOVE /Y";
+#else
+  std::string cmd = "/bin/mv";
+#endif
+  cmd += " ";
+  cmd += quote(a_from);
+  cmd += " ";
+  cmd += quote(a_to);
+  int ret = ::system(cmd.c_str());
+  return (ret==(-1)?false:true);
+#endif
+}
+
+inline bool cp(const std::string& a_from,const std::string& a_to) {
+  if(a_to==a_from) return true;
+#if TARGET_OS_IPHONE
+  return false;
+#else
+#ifdef _WIN32
+  std::string cmd = "COPY /Y";
+#else
+  std::string cmd = "/bin/cp";
+#endif
+  cmd += " ";
+  cmd += quote(a_from);
+  cmd += " ";
+  cmd += quote(a_to);
+  int ret = ::system(cmd.c_str());
+  return (ret==(-1)?false:true);
+#endif
+}
+
+inline bool rm(const std::string& a_file){
+  // WARNING : do not confuse with file::std_remove which is 
+  //           an encapsulation of the remove of stdio.h that
+  //           does not support wildcards.
+#if TARGET_OS_IPHONE
+  return false;
+#else
+#ifdef _WIN32
+  std::string cmd = "DEL /Q";
+#else
+  std::string cmd = "/bin/rm -f";
+#endif
+  cmd += " ";
+  cmd += quote(a_file);
+  int ret = ::system(cmd.c_str());
+  return (ret==(-1)?false:true);
+#endif
+}
+
+}}
+
+#endif

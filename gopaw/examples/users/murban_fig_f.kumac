@@ -1,0 +1,46 @@
+* GB : use TTF fonts (same indexing as ROOT)
+set VFON 62
+set GFON 62
+set TFON 62
+set CFON 62
+set LFON 62
+opt UTIT
+
+* GB :
+fortran/file 66 fig1.ps
+metafile 66 -111
+
+set pmci 1
+null 1 4. 0.1 0.5
+
+set mtyp 8
+fun/points 20
+fun/pl airgroup.for 1 4. sp
+*key 1.5 .22 8 'group refractivity (*10**3) for Air' 
+key 1.5 .22 8 'group refractivity (x10^3!) data "M#10"N#' 
+
+set mtyp 26
+fun/points 40
+fun/pl 1000.*41.8e-4/(16.7-x) 1 4. sp
+*key 1.5 .2 26 'our formula with "L#E?i!"G#=16.7 eV' 
+key 1.5 .2 26 'our formula with E?AV!=16.7 eV' 
+
+set mtyp 31
+v/cre energy(1) r 16.7
+fun/pl airclas.for 1 4 sp
+key 1.5 .18 31 'Maxwell-quantum formula with E?AV!=16.7 eV' 
+
+set mtyp 28
+v/del energy
+v/cre energy(1) r 19.1
+fun/pl airclas.for 1 4 sp
+key 1.5 .16 28 'Maxwell-quantum formula with E?AV!=19.1 eV' 
+
+* GB :
+atitle 'E?[g]!(eV)' '10^3!(n?g!-1)'
+*atitle 'E?photon!' '10^3!(n-1)'
+*atitle 'E?gamma!' '10^3!(n-1)'
+
+* GB :
+close 66
+KUIP/PSVIEW fig1.ps

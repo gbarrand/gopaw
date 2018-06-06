@@ -1,0 +1,33 @@
+
+  Here is a copy of some of the CERN/PAW examples
+ found under pawlib/paw/demo of a 2002 CERNLIB distribution.
+ These examples are the ones that we have been able
+ to emulate compared to the native CERN/PAW program.
+
+  Note that some of the examples need a f77 compiler
+ to "on the fly compile and load" some .f file.
+ Some examples natively write or read a <name>.hbook file. If the
+ BatchLab/Zebra driver had been reconstructed and is available, 
+ they should run properly. If not, then a <name>.root file is produced
+ at writing and an attempt if made on a <name>.root file at reading.
+ 
+  Below is a review of what the various examples need :
+
+ - pawex1,2,3,4,5,6,7,8,9 : they do not need special drivers 
+   and should proceed properly at first shoot.
+
+ - pawex10 : it needs the f77 on the fly compilation and loading on mandel.f
+ - pawex11 : it needs the f77 loading and produces a pawhists.hbook if the 
+   Zebra IO driver is available and a pawhists.root file if not.
+ - pawex12,13,14,15 : they read the pawhists.hbook file if the Zebra IO driver
+   is found or the pawhists.root file if not.
+ - pawex16 : it reads the aptuple.dat ascii file and produces a aptuple.hbook
+   or aptuple.root file according available IO driver.
+ - pawex17,18,19,20,21 : it reads aptuple.hbook or aptuple.root.
+ - pawex22, 23 : standalone sigma examples. 
+ - pawex24 : it reads the pawhists.hbook or pawhists.root file.
+
+ Put all together only : 
+  pawex1,2,3,4,5,6,7,8,9,22,23 should proceed with no special drivers.
+
+

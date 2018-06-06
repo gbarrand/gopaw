@@ -1,0 +1,24 @@
+MACRO surf
+  2D 10 'rands' 20 -5 5  20 -5 5
+ 
+  nev = 1000
+  DO j=1,[nev]
+*    EXEC rgauss
+    EXEC rbw 0 1
+    X = [@]
+    EXEC rbw 0 2
+    Y = [@]
+    CALL HFILL(10,[X],[Y],1.)
+  ENDDO
+
+
+  ZONE 2 2
+  ANGLE 30 30
+
+  H/PL 10 SURFZ
+  H/PL 10 SURF1Z
+  H/PL 10 SURF2Z
+  H/PL 10 SURF3Z
+
+  H/DEL 10
+  RETURN

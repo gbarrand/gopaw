@@ -1,0 +1,7 @@
+MACRO rbw
+  mean = [1]
+  gamma = [2]
+  pi = 1.5707963267948965580E0
+  rbw = $SIGMA(0.5 * [gamma] * TAN( (2. * RNDM(333) - 1.) * [pi]))
+  EXITM [rbw]
+  RETURN

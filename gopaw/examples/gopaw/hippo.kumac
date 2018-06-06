@@ -1,0 +1,15 @@
+MACRO hippo
+**************************************************************************
+* Reading a tuple in an hippodraw ascii file.                            *
+**************************************************************************
+ZONE 1 1
+
+H/FILE 1 aptuple.tnt.gz
+CD //LUN1
+H/LIST
+H/CREATE/1D 100 aptuple.age 50 20 70
+/NTUPLE/PROJECT 100 aptuple.age
+H/PLOT 100
+CLOSE 1
+H/DEL *
+RETURN

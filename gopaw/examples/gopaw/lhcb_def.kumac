@@ -1,0 +1,115 @@
+********************************************************************
+* PURPOSE:
+*
+* This macro defines a reasonable style for (black-and-white) 
+* "publication quality" PAW plots. The default settings contain 
+* many features that are either not desirable for printing on white 
+* paper or impair the general readibility of plots. 
+*
+* USAGE:
+*
+* Simply include the line
+*   exec $LHCBSTYLE/paw/lhcbstyle.kumac
+* at the beginning of your paw kumac.
+*
+* SOME COMMENTS:
+* 
+* Statistics and fit boxes:
+* 
+* "Decorative" items around the histogram are kept to a minimum.
+* In particular there is no box with statistics or fit information.
+* You can easily change this either by editing your private copy
+* of this style file or by "set" and "opt" calls in your macro.
+* For example, 
+*   opt fit; set fit 1011 
+* will add some fit information.
+*
+* Font:
+* 
+* The font is chosen to be 60, i.e.helvetica-bold with precision 0. 
+* Font is of course a matter of taste, but most people will probably 
+* agree that Helvetica bold gives close to optimal readibility in 
+* presentations. It appears to be the ROOT default, so is the best 
+* choice for compatibility. The precision of the font (0) is chosen 
+* in order to have a rotatable and scalable font. Note that control 
+* characters will not be evaluated on the screen, but do come out 
+* correctly in the postscript output.
+*
+********************************************************************
+
+set *; opt *
+
+mess 'executing lhcbstyle.kumac:' 
+mess '                      ' 
+mess '                      ' 
+mess '                         $      $   $   $$$   $    ' 
+mess '                         $      $   $  $      $    ' 
+mess '                         $      $$$$$  $      $$$  ' 
+mess '                         $      $   $  $      $  $ ' 
+mess '                         $$$$$  $   $   $$$   $$$  ' 
+mess ' ' 
+mess '                            LHCb PAW style file ' 
+mess ' ' 
+mess '     Problems, suggestions, contributions to Thomas.Schietinger@cern.ch' 
+mess ' ' 
+
+ *** G.Barrand : 2 = hershey :
+ lhcbfont = 2
+ *lhcbfont = -60
+ lhcbwidth = 10
+
+* set PostScript font (6 = helvetica-bold, precision 0):
+* (set for axis, igset for text with itx)
+ set *fon [lhcbfont]
+ igset txfp [lhcbfont]
+*
+* set the paper & margin sizes
+
+ set xsiz 20
+ set ysiz 19
+ set ymgl 3
+ set xmgl 3
+ set ymgu 1
+ set xmgr 1
+
+ set xlab 1.8
+ set xval 0.1
+ set ylab 1.5
+ set yval 0.4
+
+* use large fonts
+
+ set asiz 0.75
+ set vsiz 0.65
+ set csiz 0.65
+ set chhe 0.75
+
+* by default, do not display histogram decorations:
+
+ opt utit
+ opt nstat
+ opt nfit
+ opt nbox
+
+* histogram divisions: only 5 in x to avoid label overlaps
+ set ndvx 605
+ set ndvy 510
+
+* use bold lines and markers
+ set *wid [lhcbwidth]
+ igset lwid [lhcbwidth]
+ set mtyp 20
+ set ksiz 0.35
+ set mscf 0.35
+ set xtic 0.5
+ set ytic 0.5
+ set plci 2
+
+* other useful options
+ opt zfl1
+ filecase keep
+ zone 
+*
+return 
+
+

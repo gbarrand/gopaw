@@ -1,0 +1,27 @@
+MACRO hlist
+**************************************************************************
+* Histogram creation, deletion, list.                                    *
+**************************************************************************
+CD //PAWC
+MDIR mydir
+CD mydir
+H/CREATE/1D 1000 'My histo1' 100 0 10
+H/CREATE/1D 1001 'My histo2' 100 0 10
+H/CREATE/1D 1002 'My histo2' 100 0 10
+H/LIST 
+* PAW logic :
+H/DELETE 1000
+H/DELETE 1001
+H/LIST
+H/DELETE 0
+H/LIST
+* gopaw extensions :
+H/CREATE/1D h1 'My histo1' 100 0 10
+H/CREATE/1D h2 'My histo2' 100 0 10
+H/CREATE/1D h3 'My histo2' 100 0 10
+H/LIST 
+H/DELETE h1,h2
+H/LIST
+H/DELETE h*
+H/LIST
+RETURN

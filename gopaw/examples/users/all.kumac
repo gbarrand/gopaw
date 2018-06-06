@@ -1,0 +1,93 @@
+MACRO RUN
+
+mess "crimbault_beam.kumac..."
+exec crimbault_beam.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "crimbault_pair.kumac..."
+exec crimbault_pair.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "fabry_c.kumac..."
+exec fabry_c.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "hpwellish.kumac..."
+exec hpwellish.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "lsimard_c.kumac..."
+exec lsimard_c.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "murban_fig_c.kumac..."
+exec murban_fig_c.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "murban_sio2_c.kumac..."
+exec murban_sio2_c.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "murban_sio2_py.kumac..."
+exec murban_sio2_py.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "oblique.kumac..."
+exec oblique_c.kumac
+render
+synchronize
+wait 'wait...' 2
+opt ngri
+opt nsta
+
+mess "poisson.kumac..."
+exec poisson.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "rfabbri.kumac..."
+exec rfabbri.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "rfabbri_vec.kumac..."
+exec rfabbri_vec.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "rfabbri_vec_2.kumac..."
+exec rfabbri_vec_2.kumac
+render
+synchronize
+wait 'wait...' 2
+zone 1 1
+opt nsta
+
+mess "sstudeny.kumac..."
+exec sstudeny_c.kumac
+render
+synchronize
+wait 'wait...' 2
+*set xsiz 20
+*set ysiz 20
+
+RETURN

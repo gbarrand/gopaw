@@ -1,0 +1,34 @@
+MACRO banner
+  1DH  10 'The famous normal distribution' 100 -5 5
+  nev = 1000
+  mess $CPTIME
+  DO j=1,[nev]
+    EXEC rgauss
+*    EXEC rbw
+* [@] return code of the last macro called.
+    CALL HFILL(10,[@],0.,1.)
+*    VEC/CRE x(1) R [@]
+*    HFILL x 10
+*    VEC/DEL x
+  ENDDO
+  mess $CPTIME
+  OPT STA
+  * SET STAT [OURMEI]  //default 1111
+  * O=1 overflow
+  * U=1 underflow
+  * R=1 RMS
+  * M=1 mean
+  * E=1 entries
+  * I=1 ID
+  SET STAT 110
+  OPT FIT
+  * SET FIT [CEV]
+  *    C = 1;  print Chisquare/Number of degress of freedom
+  *    E = 1;  print errors (if e=1, v must be 1)
+  *    V = 1;  print name/values of parameters
+  SET FIT 111
+  ZONE 1 1
+  HIST/FIT 10 'g'
+  H/PLOT 10
+  H/DEL 10
+  RETURN

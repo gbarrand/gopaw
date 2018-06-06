@@ -1,0 +1,19 @@
+MACRO zone_vec
+
+set *
+
+NrOfBins = 7
+VECTOR/CREATE XX([NrOfBins])  r 0.5  1.0  1.5  2.0  2.5  3.0  3.50
+VECTOR/CREATE YY([NrOfBins])  r 0.45 1.10 1.65 2.10 2.45 3.10 3.45
+VECTOR/CREATE dXX([NrOfBins]) r [NrOfBins]*0.
+VECTOR/CREATE dYY([NrOfBins]) r 0.15 0.12 0.12 0.10 0.13 0.14 0.12 
+
+ZONE 2 2
+
+*null 0 4 0 4 
+vec/draw XX
+vec/draw YY
+vec/draw dXX
+vec/draw XX
+vec/draw dYY - S
+*vec/draw dYY

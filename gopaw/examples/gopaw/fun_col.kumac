@@ -1,0 +1,8 @@
+zon 1 2
+set plci 3
+function/fun1 100 cos(x) 100. 0. 1.
+set fwid 5
+set fcol 4
+set plci 2
+function/fun1 110 sin(x) 100. 0. 1.
+

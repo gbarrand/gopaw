@@ -1,0 +1,17 @@
+/viewer/page/set_layout
+exit
+/viewer/page/set_layout
+exit
+/viewer/page/set_layout
+clear
+clr
+quit
+shell
+shell pwd
+exit
+shell pwd
+shell ls
+exit
+lcd ./bin_clang/distrib/gopaw/1.0.0/bin/gopaw 
+shell
+lcd bin_clang

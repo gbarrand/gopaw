@@ -1,0 +1,14 @@
+* G.Barrand : to understand hplot/errors.
+
+MACRO errors
+exec alldef
+
+ve/cr run(2) R 1 2
+ve/cr erun(2) R 0.1 0.2
+ve/cr act(2) R 3 4
+ve/cr eact(2) R 0.3 0.4
+
+ve/list
+
+null 0.9 4 2.2 6
+hplot/errors run act erun eact 2 20 0.3

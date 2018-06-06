@@ -1,0 +1,13 @@
+MACRO batch
+*Exec ALLDEF
+zone 1 1
+FUN2 20 x*sin(x)*y*sin(y) 40 -10. 10. 40 -10. 10.
+contour 20 40 0
+* inlib::zbuffer to PS,JPEG,PNG :
+/picture/print 'out_contour_inzb.ps'  '0' '0' INZB_PS
+*/picture/print 'out_contour_gl2ps.ps' '0' '0' GL2PS_PS
+*/picture/print 'out_contour_inzb.png' '0' '0' INZB_PNG
+*/picture/print 'out_contour_glfb.png' '0' '0' GLFB_PNG
+hi/de 20
+RETURN
+

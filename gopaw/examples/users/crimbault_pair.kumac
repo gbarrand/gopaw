@@ -1,0 +1,41 @@
+
+opt nbox
+opt utit
+set asiz 0.6
+nt/cut 1 pr=0
+nt/cut 2 pr=1
+nt/cut 3 pr=2
+
+nt/cut 5 abs(e).gt.0.005
+***************
+* fig 1
+***************
+opt linx
+opt liny
+nt/create 1 '' 4 ! ! e vx vy vz 
+*nt/read 1 secondariesa.dat
+nt/read 1 secondaries.dat
+
+nt/create 2 '' 4 ! ! e vx vy vz 
+nt/read 2 secondaries.dat
+set hwid 10
+set hcol 1
+nt/pl 2.log10(abs(e))
+set hcol 2
+nt/pl 1.log10(abs(e)) ! ! ! ! s
+atitle 'log?10!E' ''
+/picture/print 'pair_energy.eps' '0' '0'
+render
+wait ! 2
+
+set hcol 1
+nt/pl 2.log10(abs(e)*sqrt(vx*vx+vy*vy))
+set hcol 2
+nt/pl 1.log10(abs(e)*sqrt(vx*vx+vy*vy)) ! ! ! ! s
+atitle 'log?10!Pt' ''
+/picture/print 'pair_pt.eps' '0' '0'
+
+*GB :
+KUIP/PSVIEW pair_energy.eps
+KUIP/PSVIEW pair_pt.eps
+

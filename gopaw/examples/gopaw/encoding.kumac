@@ -1,0 +1,21 @@
+
+set MSCF 2
+
+null 0 2 0 2
+
+* Default is Hershey :
+set CFON 2
+* 31 is asterisk.
+key 0.5 1.5 31 'Hershey :' 3
+key 0.5 1.3 31 'ABcedf'    3
+key 0.5 1.1 31 '[abcedf]'  3
+
+set CFON 62
+* 20 : circle filled.
+key 0.5 0.7 20 'Freetype'   3
+key 0.5 0.4 20 'ABcedf'     3
+key 0.5 0.1 20 '[abcedf]'   3
+
+*key 1.7 1. 31 'Maxwell-quantum formula with E?i!=10.6 eV' ! S
+*atitle 'E?[g]!' 'n(E?[g]!)'
+*atitle 'E?[g]!' 'n-1'

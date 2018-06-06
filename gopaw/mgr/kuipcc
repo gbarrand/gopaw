@@ -1,0 +1,24 @@
+#!/bin/sh -f
+
+# Copyright (C) 2018, Guy Barrand. All rights reserved.
+# See the file gopaw.license for terms.
+
+bush_home=../../bush
+
+. ${bush_home}/args
+. ${bush_home}/ourex_header
+
+kuipcc=../../inexlib/ourex/KUIP/${build_dir}/kuipcc
+
+if [ ! -x ${kuipcc} ] ; then
+  echo "${kuipcc} not found."
+  exit
+fi
+
+save_dir=`pwd`
+cd ../source
+
+${kuipcc} -c gopawcdf.cdf
+${kuipcc} -c pawcdf.cdf
+
+cd ${save_dir}

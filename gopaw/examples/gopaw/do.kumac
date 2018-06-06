@@ -1,0 +1,12 @@
+*
+* example : exec do 10 vec_op
+* example : exec do 20000 rgauss
+*
+MACRO do
+  nev = [1]
+  mess $CPTIME
+  DO j=1,[nev]
+    EXEC [2]
+  ENDDO
+  mess $CPTIME
+  RETURN

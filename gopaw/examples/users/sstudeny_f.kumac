@@ -1,0 +1,224 @@
+igset mscf 1. 
+igset lwid 4.0
+igset basl 0.007
+opt utit      
+opt nbox      
+opt zfl       
+opt grid      
+set grid      
+set gfon 3    
+set lfon 3    
+set tfon 3    
+set vfon 3    
+set vsiz 0.25 
+set asiz 0.25 
+set xlab 1.40 
+set ylab 0.40 
+set xval 0.35 
+set yval 0.20 
+set yhti 1.20 
+set xtic 0.20 
+set ytic 0.20 
+set bcol 1 
+set hwid 5    
+set bwid 7
+
+set ncol 50
+palette 1    
+
+* to get the sstudeny.hbook, you can do :
+*  OS> wget http:\/\/OpenScientist.lal.in2p3.fr/download/data/sstudeny.hbook
+
+h/file 1 sstudeny.hbook
+
+set xsiz 15.0 
+set ysiz 15.0
+fort/file 66 fig_1.eps          |LET-Plot
+meta -66 -113
+h/plot 1 col
+atitle 'Depth (cm)' 'LET (keV/mum)'
+close 66
+ 
+set xsiz 15.0 
+set ysiz 15.0
+fort/file 66 fig_2.eps            |contour-plots
+meta -66 -113
+angle 89.95 0.005
+h/pl 2 surf2z  
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_3.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 3 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_4.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 4 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_5.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 5 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_6.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 6 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_7.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 7 surf2z  
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_8.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 8 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_9.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 9 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_10.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 10 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_11.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 11 surf2z 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_12.eps      |Tiefendosiskurve
+meta -66 -113
+angle 0 0.1
+h/pl 12 surf1z 
+atitle 'X/cm' 'D / (Gy/s)'
+close 66
+
+fort/file 66 fig_13.eps
+meta -66 -113
+angle 0 0.1 
+h/pl 13 surf1z
+atitle 'X/cm' 'D / (Gy/s)'
+close 66
+
+fort/file 66 fig_14.eps       |strahlbreite logatithmisch
+meta -66 -113
+opt logz
+angle 0 90
+h/pl 12 surf1z 
+atitle 'Y/cm' 'D / (Gy/s)'
+opt linz
+close 66
+
+fort/file 66 fig_15.eps    |Strahlbreite off-axis
+meta -66 -113
+angle 0 90
+h/pl 13 surf1z 
+atitle 'Y/cm' 'D / (Gy/s)'
+close 66
+
+
+set xsiz 15.0
+set ysiz 15.0
+
+fort/file 66 fig_16.eps      |strahlquerschnitt
+meta -66 -113
+angle 89.95 0.005
+h/pl 23 surf2z  
+atitle 'Y/cm' 'Z/cm'
+close 66
+
+fort/file 66 fig_17.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 28 surf2z  
+atitle 'Y/cm' 'Z/cm'
+close 66
+
+fort/file 66 fig_18.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 33 surf2z  
+atitle 'Y/cm' 'Z/cm'
+close 66
+
+fort/file 66 fig_19.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 50 surf2z 
+atitle 'Y/cm' 'Z/cm'
+close 66
+
+fort/file 66 fig_20.eps
+meta -66 -113
+angle 89.95 0.005
+h/pl 70 surf2z  
+atitle 'Y/cm' 'Z/cm'
+close 66
+
+opt logz
+
+fort/file 66 fig_21.eps       |dosisprofil strahlquerschnitt
+meta -66 -113
+angle 0 0.1
+h/pl 25 surf1z  
+atitle 'Y/cm' 'D / (Gy/s)'
+close 66
+
+fort/file 66 fig_22.eps       |tiefendosiskurve logarithmisch
+meta -66 -113
+angle 0 0.1 
+h/pl 12 surf1z
+atitle 'X/cm' 'D / (Gy/s)'
+close 66
+
+opt linz
+
+fort/file 66 fig_23.eps      |strahl in eigentlicher aufloesung
+meta -66 -113
+h/pl 11 colz 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+fort/file 66 fig_24.eps     |selbes bild off axis
+meta -66 -113
+h/pl 10 colz 
+atitle 'X/cm' 'Y/cm'
+close 66
+
+opt logz
+
+fort/file 66 fig_25.eps        |strahlprofil logarithmisch
+meta -66 -113
+angle 89.95 0.005
+h/pl 28 surf2z 
+atitle 'Y/cm' 'Z/cm'
+close 66
+
+opt linz
+
+quit

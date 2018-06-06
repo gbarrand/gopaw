@@ -1,0 +1,111 @@
+#!/bin/sh -f
+
+# Copyright (C) 2018, Guy Barrand. All rights reserved.
+# See the file gopaw.license for terms.
+
+#//////////////////////////////////////////////////////////
+#// Used by Lib to produce dll for FORTRAN function.     //
+#//////////////////////////////////////////////////////////
+
+#set -x
+
+bin=
+FILE_NAME=$1
+SUFFIX=$2
+WRAP_NAME=$3
+
+#echo ${FILE_NAME}
+#echo ${WRAP_NAME}
+
+# To find include files :
+if [ "${INLIBROOT}" = "" ] ; then
+  echo "gopaw : makf77dll : environment variable INLIBROOT not defined."
+  exit
+fi
+
+/bin/rm -f ${bin}${FILE_NAME}.o
+/bin/rm -f ${bin}${WRAP_NAME}.o
+
+libs=""
+f77_compiler=""
+if test `uname` = "Darwin" ; then
+#  f77_compiler=fort77
+#  libs="-L/sw/lib -lf2c"
+#  f77_compiler=gfortran
+#  libs="-L/usr/local/lib -lgfortran"
+  if [ -x /opt/local/bin/gfortran-mp-4.8 ] ; then
+    f77_compiler=/opt/local/bin/gfortran-mp-4.8
+    libs="/opt/local/lib/gcc48/libgfortran.dylib"
+  elif [ -x /opt/local/bin/gfortran-mp-5 ] ; then
+    f77_compiler=/opt/local/bin/gfortran-mp-5
+    libs="/opt/local/lib/gcc5/libgfortran.dylib"
+  fi
+  if [ ! -x ${f77_compiler} ] ; then
+    echo "makf77dll : ${f77_compiler} not found."
+    exit
+  fi
+elif test `uname` = "Linux" ; then
+ #f77_compiler="f77 -fPIC" #lx3 : pawex10.kumac with mandel.f : bad looking.
+  f77_compiler="gfortran -fPIC"
+else
+  f77_compiler=f77
+fi
+
+if [ "${f77_compiler}" = "" ] ; then
+  echo "Lib : makf77dll : f77 compiler not found."
+  exit
+fi
+
+cxx_compiler=""
+so="so"
+if test `uname` = "Linux" ; then
+  cxx_compiler="g++ -fPIC"
+elif test `uname` = "Darwin" ; then
+  cxx_compiler=c++
+  so="dylib"
+elif [ "`uname | grep CYGWIN`" != "" ] ; then
+  cxx_compiler=g++
+  so="dll.a"
+elif test `uname` = "OSF1" ; then
+  cxx_compiler=cxx
+fi
+
+if [ "${cxx_compiler}" = "" ] ; then
+  echo "Lib : makf77dll : c++ compiler not found."
+  exit
+fi
+
+${f77_compiler} -c -o ${bin}${FILE_NAME}.o ${FILE_NAME}.${SUFFIX}
+if [ $? != 0 ] ; then
+  echo "Lib : makf77dll : compilation of ${FILE_NAME}.${SUFFIX} failed."
+  exit
+fi
+
+${cxx_compiler} -c -I"${INLIBROOT}" -o ${bin}${WRAP_NAME}.o ${WRAP_NAME}.cpp
+if [ $? != 0 ] ; then
+  echo "Lib : makf77dll : compilation of ${WRAP_NAME}.cpp failed."
+  exit
+fi
+
+if test `uname` = "Linux" ; then
+/bin/rm -f ${bin}lib${FILE_NAME}.so
+eval g++ -shared -o ${bin}lib${FILE_NAME}.so ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+if test `uname` = "Darwin" ; then
+/bin/rm -f ${bin}${FILE_NAME}.bundle
+eval c++ -bundle -twolevel_namespace -o ${bin}${FILE_NAME}.bundle ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+if [ "`uname | grep CYGWIN`" != "" ] ; then
+/bin/rm -f ${bin}${FILE_NAME}.dll
+g++ -shared -o ${bin}${FILE_NAME}.dll ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+if test `uname` = "OSF1" ; then
+/bin/rm -f ${bin}lib${FILE_NAME}.so
+eval cxx -shared -o ${bin}lib${FILE_NAME}.so ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+/bin/rm -f ${bin}${FILE_NAME}.o
+/bin/rm -f ${bin}${WRAP_NAME}.o

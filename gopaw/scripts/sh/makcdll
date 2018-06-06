@@ -1,0 +1,87 @@
+#!/bin/sh -f
+
+# Copyright (C) 2018, Guy Barrand. All rights reserved.
+# See the file gopaw.license for terms.
+
+#set -x
+
+bin=
+FILE_NAME=$1
+SUFFIX=$2
+WRAP_NAME=$3
+
+#echo ${FILE_NAME}
+#echo ${WRAP_NAME}
+
+# To find include files :
+if [ "${INLIBROOT}" = "" ] ; then
+  echo "gopaw : makcdll : environment variable INLIBROOT not defined."
+  exit
+fi
+if [ "${GOPAWROOT}" = "" ] ; then
+  echo "Environment variable GOPAWROOT not defined."
+  exit
+fi
+
+/bin/rm -f ${bin}${FILE_NAME}.o
+/bin/rm -f ${bin}${WRAP_NAME}.o
+
+c_compiler=""
+cxx_compiler=""
+so="so"
+if [ `uname` = "Linux" ] ; then
+  c_compiler="gcc -fPIC"
+  cxx_compiler="g++ -fPIC"
+elif [ `uname` = "Darwin" ] ; then
+  c_compiler=cc
+  cxx_compiler=c++
+  so="dylib"
+elif [ "`uname | grep CYGWIN`" != "" ] ; then
+  echo "gopaw : makcdll : CYGWIN : not yet ready."
+  exit
+  cxx_compiler=g++
+  so="dll.a"
+else
+  echo "gopaw : makcdll : unknow platform."
+  exit
+fi
+
+incs='-I"${INLIBROOT}" -I"${GOPAWROOT}" -I"${GOPAWROOT}/HBOOK"'
+
+if [ "${SUFFIX}" = "c" ] ; then
+  eval ${c_compiler} -c ${incs} -o ${bin}${FILE_NAME}.o ${FILE_NAME}.${SUFFIX}
+  if [ $? != 0 ] ; then
+    echo "gopaw : makcdll : C compilation of ${FILE_NAME}.${SUFFIX} failed."
+    exit
+  fi
+else
+  eval ${cxx_compiler} -c ${incs} -o ${bin}${FILE_NAME}.o ${FILE_NAME}.${SUFFIX}
+  if [ $? != 0 ] ; then
+    echo "gopaw : makcdll : C++ compilation of ${FILE_NAME}.${SUFFIX} failed."
+    exit
+  fi
+fi
+
+${cxx_compiler} -c -I"${INLIBROOT}" -o ${bin}${WRAP_NAME}.o ${WRAP_NAME}.cpp
+if [ $? != 0 ] ; then
+  echo "gopaw : makcdll : compilation of ${WRAP_NAME}.cpp failed."
+  exit
+fi
+
+if [ `uname` = "Linux" ] ; then
+/bin/rm -f ${bin}lib${FILE_NAME}.so
+eval g++ -shared -o ${bin}lib${FILE_NAME}.so ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+if [ `uname` = "Darwin" ] ; then
+/bin/rm -f ${bin}${FILE_NAME}.bundle
+eval c++ -bundle -twolevel_namespace -o ${bin}${FILE_NAME}.bundle ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+if [ "`uname | grep CYGWIN`" != "" ] ; then
+/bin/rm -f ${bin}${FILE_NAME}.dll
+eval g++ -shared -o ${bin}${FILE_NAME}.dll ${bin}${WRAP_NAME}.o ${bin}${FILE_NAME}.o ${libs}
+fi
+
+/bin/rm -f ${bin}${FILE_NAME}.o
+/bin/rm -f ${bin}${WRAP_NAME}.o

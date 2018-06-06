@@ -1,0 +1,153 @@
+MACRO RUN
+
+mess "banner.kumac..."
+exec banner.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "box.kumac..."
+exec box.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "color_c.kumac..."
+exec color_c.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "color_py.kumac..."
+exec color_py.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "contour.kumac..."
+exec contour.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "contour2.kumac..."
+exec contour2.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "errors.kumac..."
+exec errors.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "fun_col.kumac..."
+exec fun_col.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "hfile.kumac..."
+exec hfile.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "hippo.kumac..."
+exec hippo.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "hlist.kumac..."
+exec hlist.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "labels.kumac..."
+exec labels.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "axis.kumac..."
+exec axis.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "lego.kumac..."
+exec lego.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "lhcb_style.kumac..."
+exec lhcb_style.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "nplot.kumac..."
+exec nplot.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "null.kumac..."
+exec null.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "surf.kumac..."
+exec surf.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "surf5.kumac..."
+exec surf5.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "text.kumac..."
+exec text.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "vec_op.kumac..."
+exec vec_op.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "zone_vec.kumac..."
+exec zone_vec.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "encoding.kumac..."
+exec encoding.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "legends.kumac..."
+exec legends.kumac
+render
+synchronize
+wait 'wait...' 2
+
+mess "hdf5.kumac..."
+exec hdf5.kumac
+render
+synchronize
+wait 'wait...' 2
+
+RETURN

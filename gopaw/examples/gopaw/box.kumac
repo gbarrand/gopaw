@@ -1,0 +1,20 @@
+MACRO box
+* Examples taken from pawcdf.cdf BOX Guidance.
+    SET * ; OPT *          | Reset the defaults
+    NULL 0 10 0 10         | Draw a frame (cf HELP NULL)
+*   SET PLCI 3
+    SET FAIS 0             | Fill area interior style hollow
+    BOX 1 3 1 3            | Draw a box
+*   SET FACI 3
+    SET FAIS 1             | Fill area interior style solid
+    BOX 1 3 3 5            | Draw a box
+    SET FAIS 3             | Fill area interior style hatched
+    SET FASI 245           | Changes the type of hatches
+    BOX 1 3 5 7            | Draw a box
+    SET FASI 3             | Changes the type of hatches
+    BOX 3 5 5 7            | Draw a box
+    SET BORD 1             | The border is requested
+    SET PLCI 2             | Line colour is red
+    SET FASI 4             | Changes the type of hatches
+    BOX 5 7 5 7            | Draw a box
+    RETURN

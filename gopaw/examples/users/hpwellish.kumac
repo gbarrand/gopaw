@@ -1,0 +1,27 @@
+MACRO hpwellish
+**************************************************************************
+* Creation of an Ntuple. Plot with expression.                           *
+**************************************************************************
+exec alldef
+zone 3 2
+*zone 1 1
+ntuple/create 1 'H.P.Wellish test' 2 ! ! e x
+ntuple/read 1 hpwellish.dat
+
+opt stat
+* OURMEI
+set stat 111111
+
+2d 55 'HPW' 100 0 3 100 0 2
+nt/pl 1.x%e ! ! -55
+nt/pl 1.x%e ! ! -55 ! !
+nt/pl 1.x%e ! ! ! ! ! 55
+nt/pl 1.x%e  
+nt/pl 1.x%e ! ! ! ! ! 1000000
+h/print 55
+h/print 1000000
+h/list
+
+zone
+hi/de 55
+RETURN

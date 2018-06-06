@@ -1,0 +1,159 @@
+MACRO rfabbri
+
+set *
+*opt ZFL
+opt nbox 
+
+mess "MESSAGE: This is a simple macro to test some functionalities"
+mess "MESSAGE: of gopaw."
+render
+wait ! 1
+
+mess "MESSAGE: Defining X/Y real arrays with errors ..."
+render
+wait ! 1
+NrOfBins = 7
+VECTOR/CREATE XX([NrOfBins])  r 0.5  1.0  1.5  2.0  2.5  3.0  3.50
+VECTOR/CREATE YY([NrOfBins])  r 0.45 1.10 1.65 2.10 2.45 3.10 3.45
+VECTOR/CREATE dXX([NrOfBins]) r [NrOfBins]*0.3
+VECTOR/CREATE dYY([NrOfBins]) r 0.25 0.22 0.22 0.20 0.23 0.24 0.22 
+
+mess "MESSAGE: Drawing coordinates frame ..."
+render
+wait ! 1
+null 0 4 0 4 
+render
+wait ! 1
+ISTRING = Input Amplitude  (Volt)
+OSTRING = Output Amplitude (a.u.)
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+render
+wait ! 1
+
+* =========================================================================
+* TESTING the vectors symbol size
+* =========================================================================
+mess 
+mess "MESSAGE: ***** Testing the marker size *****"
+mess "MESSAGE: Plotting Y vs X arrays ..."
+mess "MESSAGE: We perform a loop, increasing the symbols size at each step"
+SYMB_TYPE = 20
+SYMB_SIZE = 2.5
+do loop=1,4,1
+   mess "MESSAGE: SYMB_TYPE = [SYMB_TYPE]"
+   mess "MESSAGE: SYMB_SIZE = [SYMB_SIZE]"
+   SYMB_SIZE = $EVAL([SYMB_SIZE] - 0.5)
+   null 0 4 0 4
+   GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+   set HCOL $EVAL([loop]+1)
+   set PMCI [loop]
+   GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+   render
+   wait ! 1
+enddo
+SYMB_SIZE = 0.5
+
+* =========================================================================
+* TESTING the axis cosmetics
+* =========================================================================
+mess 
+mess "MESSAGE: ***** Testing the axis cosmetics *****"
+mess "MESSAGE: Increasing the axis Values SIZe ..."
+set VSIZ 0.4
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+render
+wait ! 1
+
+mess "MESSAGE: Increasing the axis lables SIZe ..."
+set ASIZ 0.4
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+render
+wait ! 1
+
+mess "MESSAGE: Shifting the labels ..."
+set XLAB 1.8
+set YLAB 1.2
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+render
+wait ! 1
+
+* =========================================================================
+* TESTING the size of the PAD
+* =========================================================================
+mess 
+mess "MESSAGE: ***** Testing the PAD size *****"
+mess "MESSAGE: Changing Left and right margins ..."
+set XMGR 3
+set XMGL 3
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+render
+wait ! 1
+
+mess "MESSAGE: Changing Top and Bottom margins ..."
+set YMGU 3
+set YMGL 3
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+render
+wait ! 1
+
+* =========================================================================
+* TESTING the comment printout
+* =========================================================================
+mess 
+mess "MESSAGE: ***** Testing the printout comment *****"
+mess "MESSAGE: Drawing a comment ..."
+set CHHE 0.4
+itx 0.5 3.5 'This is an example of plot Cosmetics' 
+render
+wait ! 1
+
+* =========================================================================
+* TESTING the FONTs
+* =========================================================================
+mess 
+mess "MESSAGE: ***** Testing the FONTs choice *****"
+mess "MESSAGE: Changing Axis values Font to 66 ..."
+set VFON 66
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+itx 0.5 3.5 'This is an example of plot Cosmetics'
+render
+wait ! 1
+
+mess "MESSAGE: Changing Axis Labels Font to 66 ..."
+set LFON 66
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+itx 0.5 3.5 'This is an example of plot Cosmetics'
+render
+wait ! 1
+
+mess "MESSAGE: Changing Comment Font to 66 ..."
+set CFON 66
+set TFON 66
+set TXFP 66
+null 0 4 0 4
+GRAPHICS/HPLOT/ATITLE [ISTRING] [OSTRING]
+GRAPHICS/HPLOT/ERRORS XX YY dXX dYY [NrOfBins] [SYMB_TYPE] [SYMB_SIZE] ''
+itx 0.5 3.5 'This is an example of plot Cosmetics'
+render
+wait ! 1
+
+mess 
+mess "MESSAGE: bye"
+
+pi/pri tmp.eps
+KUIP/PSVIEW tmp.eps
+RETURN
