@@ -593,7 +593,7 @@ void F77_ENTRY_C4I(Kuargs,prgnam,logonf,batchf,logfil,ierror)
     args[0] = '\0';
   }
   else {
-    strcpy( args, p );
+    kuip_strcpy( args, p );
     strupper( args );
     args[0] = ' ';
   }

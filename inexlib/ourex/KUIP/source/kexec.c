@@ -797,8 +797,7 @@ int valid_option( KmParameter *par,
           free( val );
           if( p != NULL ) {
             /* remove this option */
-	    kmemmove( p, p + len , strlen(p+len) +1); /*GB*/
-/* overlapping            strcpy( p, p + len );*/
+            kuip_strcpy( p, p + len ); /*GB*/
           }
         }
       }
@@ -873,8 +872,7 @@ char *clean_word( char *word )
 
       else if( p[1] == '/' && p[2] == '/' && p[3] == '\'' ) {
         /* contract "'abc'//'def'" to "'abcdef'" */
-	kmemmove(p, p + 4 , strlen(p+4) + 1); /*GB*/
-	/*        strcpy( p, p + 4 );*/
+	kuip_strcpy( p, p + 4 ); /*GB*/
         p--;
       }
 
@@ -892,8 +890,7 @@ char *clean_word( char *word )
         }
         if( conc == NULL ) {
           /* contract "'abc'//def" to "'abcdef'" */
-	  kmemmove( p, p + 3, strlen(p+3) + 1 ); /*GB*/
-	  /*          strcpy( p, p + 3 );*/
+	  kuip_strcpy( p, p + 3 ); /*GB*/
           strcat( p, "'" );
         }
         else {
@@ -901,8 +898,7 @@ char *clean_word( char *word )
           /*               ^p    ^conc */
           strncpy( p, p + 3, conc - p - 3 ); /* "'abcdefdef//ghi" */
           conc[-3] = '\'';                   /* "'abcdef'ef//ghi" */
-	  kmemmove( conc - 2, conc, strlen(conc) + 1); /*GB*/
-	  /*          strcpy( conc - 2, conc );*/
+	  kuip_strcpy( conc - 2, conc ); /*GB*/
         }
       }
 
@@ -925,8 +921,7 @@ char *clean_word( char *word )
       }
       else if( p[3] != '\0' ) {
         /* contract "abc//def" to "abcdef"; leave "abc//" unchanged */
-	kmemmove( p + 1, p + 3, strlen(p + 3) + 1 ); /*GB*/
-	/*        strcpy( p + 1, p + 3 );*/
+	kuip_strcpy( p + 1, p + 3 ); /*GB*/
       }
     }
 
@@ -958,8 +953,7 @@ char *clean_word( char *word )
       }
       else if( p[1] == '\'' ) {
         /* contract "'abc''def'" to "'abc'def'" */
-	kmemmove( p, p + 1, strlen(p+1) + 1 ); /*GB*/
-	/*        strcpy( p, p + 1 );*/
+	kuip_strcpy( p, p + 1 ); /*GB*/
       }
       else {
         quoted = 0;
@@ -1373,7 +1367,7 @@ int exec_decoded_cmd( KmCommand *cmd )
         status = KUMAC_UNWIND; /* quit macro execution */
       if( !comma || status != 0 )
         break;
-      strcpy( cmd->argv[cmd->list_par-1], p );
+      kuip_strcpy( cmd->argv[cmd->list_par-1], p ); /*GB*/
     }
   }
   else {
@@ -2004,8 +1998,7 @@ char *ku_getl()
       list_this = strdup( list_arg );
       while( *p == ' ' )
         p++;                    /* skip leading blanks */
-	kmemmove( list_arg, p, strlen(p) + 1 ); /*GB*/
-	/*      strcpy( list_arg, p );*/
+	kuip_strcpy( list_arg, p ); /*GB*/
     }
     else {
       /* pass the complete thing */

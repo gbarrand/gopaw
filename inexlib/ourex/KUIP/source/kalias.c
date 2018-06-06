@@ -693,7 +693,8 @@ char *repl_sysfun( line, eval )
 
             if( is_eval || is_unquote ) {
               expr[arglen-1] = '\0';
-              expr = strcpy( expr, expr + len + 2 );
+              /*expr = strcpy( expr, expr + len + 2 );*/
+              kuip_strcpy( expr, expr + len + 2 ); /*GB*/
             }
             value = ku_eval( expr );
             free( expr );
@@ -1003,7 +1004,7 @@ char **ku_qenv()
         while( (p = strchr( value, '\'' )) != NULL ) {
           *p = '\0';
           env[nenv] = mstr2cat( env[nenv], value, "''" );
-          strcpy( value, p + 1 );
+          kuip_strcpy( value, p + 1 ); /*GB*/
         }
         env[nenv] = mstr2cat( env[nenv], value, opt );
         free( value );

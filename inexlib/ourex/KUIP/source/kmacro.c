@@ -650,7 +650,7 @@ int op_macro( tos, parameter_list, null2 )
       n = strlen( name );
       if( name[0] == '[' && name[n-1] == ']' ) {
         name[n-1] = '\0';
-        strcpy( name, name + 1 );
+        kuip_strcpy( name, name + 1 ); /*GB*/
       }
 
       /*
@@ -1135,11 +1135,11 @@ char *read_line( stream, macro )
      */
     while( (p = strstr( buf, "@(" )) != NULL ) {
       *p = '[';
-      strcpy( p + 1, p + 2 );
+      kuip_strcpy( p + 1, p + 2 ); /*GB*/
     }
     while( (p = strstr( buf, "@)" )) != NULL ) {
       *p = ']';
-      strcpy( p + 1, p + 2 );
+      kuip_strcpy( p + 1, p + 2 ); /*GB*/
     }
 
     /* remove tabs and trailing blanks */
@@ -1162,6 +1162,12 @@ KumacStatement parse_statement( line )
   KumacStatement stmt = SYNTAX_ERROR;
   char *tokline = strdup( line );
   char *tok1 = strqtok( tokline );
+  if(tok1==NULL) { /*GB : to hold in case we pass a binary file instead of a kumac file.*/
+    print_error( "kmacro : parse_statement : strqtok() failed", NULL );
+    stmt = SYNTAX_ERROR;
+    free( tokline );
+    return stmt;
+  }
   char *tok2 = strqtok( NULL );
   char *p;
   int len1 = strlen( tok1 );
@@ -1443,21 +1449,31 @@ KumacStatement parse_statement( line )
         stmt = SYNTAX_ERROR;
       }
       else {
-        strtrim( stmt_arg2 );
-        strtrim( stmt_arg3 );
-        if( stmt_arg2[0] == '\0' ) {
+	/*G.Barrand : begin :*/
+	if(stmt_arg2==NULL) {
           print_error( "DO statement with empty start expression", NULL );
           stmt = SYNTAX_ERROR;
-        }
-        if( stmt_arg3[0] == '\0' ) {
+	} else if(stmt_arg3==NULL) {
           print_error( "DO statement with empty end expression", NULL );
           stmt = SYNTAX_ERROR;
-        }
-        if( stmt_arg4[0] == '\0' ) {
-          print_error( ">Missing increment 1 at end of DO statement supplied",
-                      NULL );
-          stmt_arg4 = mstrcat( stmt_arg4, "1" );
-        }
+	} else {
+	/*G.Barrand : end.*/
+          strtrim( stmt_arg2 );
+          strtrim( stmt_arg3 );
+          if( stmt_arg2[0] == '\0' ) {
+            print_error( "DO statement with empty start expression", NULL );
+            stmt = SYNTAX_ERROR;
+          } 
+          if( stmt_arg3[0] == '\0' ) {
+            print_error( "DO statement with empty end expression", NULL );
+            stmt = SYNTAX_ERROR;
+          }
+          if( stmt_arg4[0] == '\0' ) {
+            print_error( ">Missing increment 1 at end of DO statement supplied",
+                        NULL );
+            stmt_arg4 = mstrcat( stmt_arg4, "1" );
+          } /*G.Barrand*/
+	}
       }
     }
   }
@@ -1648,8 +1664,10 @@ KumacStatement parse_statement( line )
   else if( ( ku_strcasecmp( tok1, "ON" ) == 0
             || ku_strcasecmp( tok1, "OF" ) == 0
             || ku_strcasecmp( tok1, "OFF" ) == 0 )
-          && ku_strcasecmp( tok2, "ERROR" ) == 0 ) {
-
+    /*GB : to hold in case we pass a binary file instead of a kumac file.*/
+    /*GB : && ku_strcasecmp( tok2, "ERROR" ) == 0 ) { */
+	   && ( (tok2 != NULL) && (ku_strcasecmp( tok2, "ERROR" ) == 0) ) ) {
+    
     if( ku_strcasecmp( tok1, "ON" ) != 0 ) {
       stmt = OFF_ERROR_Statement;
     }
@@ -1819,9 +1837,7 @@ KumacStatement next_statement( stream, macro )
 
   while( full_line[n] == ' ' )
     n++;
-  if( n > 0 )
-    kmemmove(full_line, full_line + n, strlen(full_line + n) + 1); /*GB*/
-/* overlapping strings, use memmove strcpy( full_line, full_line + n ); */
+  if( n > 0 ) kuip_strcpy( full_line, full_line + n ); /*GB*/
 
   if( full_line[0] == '\0' || full_line[0] == '*' || full_line[0] == '|' ) {
     /* empty or comment line */
@@ -1905,7 +1921,7 @@ KumacStatement next_statement( stream, macro )
         full_line = stmt_arg2;
       }
       else {
-        strcpy( full_line, stmt_arg2 );
+        kuip_strcpy( full_line, stmt_arg2 ); /*GB*/
         strcat( full_line, "; " );
         strcat( full_line, tail );
         free( stmt_arg2 );
@@ -1920,7 +1936,7 @@ KumacStatement next_statement( stream, macro )
     full_line = NULL;
   }
   else {
-    strcpy( full_line, tail );
+    kuip_strcpy( full_line, tail ); /*GB*/
   }
 
   return stmt;

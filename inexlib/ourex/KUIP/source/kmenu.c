@@ -1097,7 +1097,7 @@ void interactive_find( char *expr, int keym )
            keyw = (char **) realloc( (char*)keyw, (nkey+1) * sizeof (char *) );
            *p = '\0';
            if ( !km_strempty( sav ) ) keyw[nkey++] = strdup( sav );
-           strcpy ( sav, p + 1 );
+           kuip_strcpy ( sav, p + 1 ); /*GB*/
     }
     keyw = (char **) realloc( (char*)keyw, (nkey+1) * sizeof (char *) );
     if ( !km_strempty( sav ) ) keyw[nkey++] = strdup( sav );
@@ -2686,7 +2686,7 @@ void F77_ENTRY_C3(Kucmd,refpat,item,chopt)
       if( menu_name[0] == '\\' )
         menu_name[0] = '/';
       else
-        strcpy( menu_name, menu_name + 2 );
+        kuip_strcpy( menu_name, menu_name + 2 ); /*GB*/
       *slash = '\0';
       path = realloc( path, strlen( path ) + strlen( menu_name ) + 1 );
       strcat( path, menu_name );

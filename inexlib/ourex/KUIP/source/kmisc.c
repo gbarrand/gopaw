@@ -280,7 +280,7 @@ char *fexpand( const char *fname,
 
   if( path[0] == '-' ) {
     /* if "-file" remove "-" and leave rest untouched */
-    strcpy( path, path + 1 );
+    kuip_strcpy( path, path + 1 ); /*GB*/
   }
 
   else if( ftype != NULL ) {

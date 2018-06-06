@@ -1374,7 +1374,7 @@ int kmathlex()
     if( str != NULL ) {         /* remove quotes */
       char *s;
       for( p = str; (s = strstr( p, "''" )) != NULL; p = s + 1 )
-        strcpy( s, s + 1 );
+        kuip_strcpy( s, s + 1 ); /*GB*/
       kmathlval.sval = str;
       kline = n + 1;
       return STRING;
@@ -2510,9 +2510,9 @@ case 77:
           if( n >= 2 && kmath_val.sval[0] == '\'' && kmath_val.sval[n-1] == '\'' ) {
             char *p = kmath_val.sval;
             kmath_val.sval[n-1] = '\0';
-            strcpy( kmath_val.sval, kmath_val.sval + 1 );
+            kuip_strcpy( kmath_val.sval, kmath_val.sval + 1 ); /*GB*/
             while( (p = strstr( p, "''" )) != NULL ) {
-              strcpy( p, p + 1 );
+              kuip_strcpy( p, p + 1 ); /*GB*/
               p++;
             }
           }
@@ -2590,7 +2590,7 @@ case 87:
           else if( k < 1 )
             YYABORT;
           else
-            strcpy( kmath_val.sval, kmath_val.sval + k - 1 );
+            kuip_strcpy( kmath_val.sval, kmath_val.sval + k - 1 ); /*GB*/
         }
 break;
 case 88:
@@ -2607,7 +2607,7 @@ case 88:
           else if( k < 1 )
             YYABORT;
           else {
-            strcpy( kmath_val.sval, kmath_val.sval + k - 1 );
+            kuip_strcpy( kmath_val.sval, kmath_val.sval + k - 1 ); /*GB*/
             if( k + n <= len )
               kmath_val.sval[n] = '\0';
           }

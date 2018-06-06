@@ -710,9 +710,9 @@ String:   STRING                    { $$ = $1; }
           if( n >= 2 && $$[0] == '\'' && $$[n-1] == '\'' ) {
             char *p = $$;
             $$[n-1] = '\0';
-            strcpy( $$, $$ + 1 );
+            kuip_strcpy( $$, $$ + 1 ); /*GB*/
             while( (p = strstr( p, "''" )) != NULL ) {
-              strcpy( p, p + 1 );
+              kuip_strcpy( p, p + 1 ); /*GB*/
               p++;
             }
           }
@@ -769,7 +769,7 @@ String:   STRING                    { $$ = $1; }
           else if( k < 1 )
             YYABORT;
           else
-            strcpy( $$, $$ + k - 1 );
+            kuip_strcpy( $$, $$ + k - 1 ); /*GB*/
         }
 
 /* SUBSTRING(s,k,n) */
@@ -786,7 +786,7 @@ String:   STRING                    { $$ = $1; }
           else if( k < 1 )
             YYABORT;
           else {
-            strcpy( $$, $$ + k - 1 );
+            kuip_strcpy( $$, $$ + k - 1 ); /*GB*/
             if( k + n <= len )
               $$[n] = '\0';
           }
@@ -1652,7 +1652,7 @@ int kmathlex()
     if( str != NULL ) {         /* remove quotes */
       char *s;
       for( p = str; (s = strstr( p, "''" )) != NULL; p = s + 1 )
-        strcpy( s, s + 1 );
+        kuip_strcpy( s, s + 1 ); /*GB*/
       kmathlval.sval = str;
       kline = n + 1;
       return STRING;

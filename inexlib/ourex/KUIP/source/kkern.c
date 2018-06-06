@@ -465,6 +465,9 @@ void *kmemmove( void *vdst,          /*GB*/
   return dst;
   */
 }
+void kuip_strcpy(char* str1,const char *str2 ) {  
+  kmemmove(str1,str2,strlen(str2)+1); /*it takes into account overlapping.*/
+}
 /*GB #endif */
 
 
@@ -855,8 +858,7 @@ char *strtrim( char *str )
   for( n = 0; str[n] == ' '; )
     n++;
   if( n > 0 )  
-    kmemmove( str, str + n, strlen(str+n) + 1); /*GB*/
-/*  Overlapping, use memmove    strcpy( str, str + n );*/
+    kuip_strcpy( str, str + n); /*GB*/
   return str;
 }
 
