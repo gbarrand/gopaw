@@ -236,11 +236,12 @@ ${bush_home}/find_rm ${to} 'DerivedData'
 ${bush_home}/find_rm ${to} 'out*_log'
 ${bush_home}/find_rm ${to} 'err*_log'
 ${bush_home}/find_rm ${to} 'out*.log'
+${bush_home}/find_rm ${to} 'git*_log'
 ${bush_home}/find_rm ${to} 'out*.fits'
 ${bush_home}/find_rm ${to} 'out*.ps'
 ${bush_home}/find_rm ${to} 'out*.root'
 ${bush_home}/find_rm ${to} '*.o'
-${bush_home}/find_rm ${to} 'term_*.hist'
+${bush_home}/find_rm ${to} 'term*.hist'
 ${bush_home}/find_rm ${to} 'secure.properties'
 
 /bin/rm -R -f ${to}/Users
