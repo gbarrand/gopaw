@@ -786,7 +786,7 @@ public:
     return (plotter*)(*sep)[PLOTTER()];    
   }
 public:
-  void init_sg() {
+  void init_sg() {  // used also in gopaw::base_viewer::clean_gstos().
     m_group.clear();
     m_sep.clear();
     m_border_sep.clear();

@@ -1755,6 +1755,7 @@ protected:
     m_data_sep.add(new noderef(m_points_sep));
     m_data_sep.add(new noderef(m_inner_frame_sep));
   }
+
   void update_layout(){
     float XSIZ = width;
     float XMGL = left_margin;
