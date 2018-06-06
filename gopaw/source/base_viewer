@@ -45,7 +45,7 @@ public:
     _set_size(a_width,a_height); //it sets m_camera.height.
     
   }
-  virtual ~base_viewer() {}
+  virtual ~base_viewer() {clean_gstos();} //take care of nodes gstos and graphics managers.
 public:
 protected:
   base_viewer(const base_viewer& a_from)
@@ -71,6 +71,7 @@ public:
   //a_group.add(new inlib::sg::noderef(m_light));
     a_group.add(new inlib::sg::noderef(m_plots));
   }
+  void clean_gstos() {m_plots.init_sg();} //m_camera,m_light do not have gstos.
 protected:
   void _set_size(unsigned int a_w,unsigned int a_h) {
     if(!a_w||!a_h) return;    

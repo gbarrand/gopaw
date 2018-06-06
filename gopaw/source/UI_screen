@@ -84,7 +84,11 @@ public:
   {
     base_viewer::set_viewer_scene_graph(&(parent_viewer::sg()));
   }
-  virtual ~GL_viewer() {}
+  virtual ~GL_viewer() {
+    //WARNING : nodes may refer graphics managers (to handle gstos/texs), then
+    //          we have to delete them before the managers.
+    base_viewer::clean_gstos();
+  }
 public:
   GL_viewer(const GL_viewer& a_from)
   :iwidget(a_from)
