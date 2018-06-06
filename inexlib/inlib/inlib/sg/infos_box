@@ -248,7 +248,10 @@ public:
         if((*it).size()) {empty = false;break;}
       }
     }
-    if(empty) return;}
+    if(empty) {
+      //parent::update_sg();
+      return;
+    }}
 
     rgba* mat = new rgba();
     mat->color = color;

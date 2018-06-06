@@ -115,6 +115,12 @@ public:
   void set_clear_color(const colorf& a_color) {
     m_clear_color = a_color;
   }
+  void get_clear_color(float& a_r,float& a_g,float& a_b,float& a_a) {
+    a_r = m_clear_color.r();
+    a_g = m_clear_color.g();
+    a_b = m_clear_color.b();
+    a_a = m_clear_color.a();
+  }
 
   const colorf& background() const {return m_clear_color;}
 

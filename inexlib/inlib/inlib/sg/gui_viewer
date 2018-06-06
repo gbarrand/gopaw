@@ -2371,7 +2371,7 @@ protected:
    {text_button* b = new text_button(a_ttf);
     set_arconf(a_params,*b,"scene to menu area (shown once)");
     set_button_style(a_params,*b);
-    b->back_area::color = colorf(0.7f,0.9f,1,0.2f);
+    b->back_area::color = colorf(0.7f,0.9f,1,0.4f);  //alpha = 0.5f so that it is visible on a black back (case of pmx).
     //b->width = wbutton*(1-2*0.3f);
     b->width = wbutton;
     b->height = a_hzone;

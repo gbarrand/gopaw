@@ -435,7 +435,7 @@ protected:
 
   static void string_segs(
    bool aGEN_POINTS // false = advance only.
-  ,const std::string& aString
+  ,const std::string& a_string
   ,float a_height
   ,const std::string& a_encoding
   ,font_type a_font
@@ -449,7 +449,9 @@ protected:
   
     bool encod_PAW = (a_encoding==encoding_PAW()?true:false);
   
-    sencoded sed = encod_PAW ? decode_PAW(aString) : decode_plain(aString);
+    sencoded sed;
+    if(encod_PAW) decode_PAW(a_string,sed);
+    else          decode_plain(a_string,sed);
   
     inlib_vforcit(hchar,sed,it) {
       const hchar& hc = *it;
@@ -554,15 +556,14 @@ protected:
   
   typedef std::vector<hchar> sencoded;
 
-  static sencoded decode_plain(const std::string& a_s){
-    sencoded sed;
+  static void decode_plain(const std::string& a_s,sencoded& a_sed){
+    a_sed.clear();
     inlib_sforcit(a_s,it) {
       hchar hc;
       hc.m_char = *it;
-      sed.push_back(hc);
+      a_sed.push_back(hc);
     }
-    if(sed.size()) sed[sed.size()-1].m_cr = true;
-    return sed;
+    if(a_sed.size()) a_sed[a_sed.size()-1].m_cr = true;
   }
   ///////////////////////////////////////////////////////////////////////////
   /// PAW encoding //////////////////////////////////////////////////////////
@@ -576,16 +577,20 @@ protected:
   //  ^ go to superscript
   //  ? go to subscript
   //  & backscpace one charachter
+  //  < go to lower case
+  //  > go to upper case (default)
   // Extension :
   //  | draw a bar over one character
+  // Found in PAW manual Version 1.14 (July 1992), page 178, 180.
   ///////////////////////////////////////////////////////////////////////////
-  static sencoded decode_PAW(const std::string& a_s){
-    sencoded sed;
+  static void decode_PAW(const std::string& a_s,sencoded& a_sed){
+    a_sed.clear();
   
     font_type font = sg::latin;
     hchar::e_move move = hchar::none;
     bool back = false;
     bool bar = false;
+  //bool upper = true; //to be done.
   
     inlib_sforcit(a_s,it) {
       char c = *it;
@@ -614,8 +619,11 @@ protected:
       } else if(c=='&') {
         back = true;
         continue;
-      } else if(c=='|') {
-        bar = true;
+      } else if(c=='<') {
+        //upper = false;
+        continue;
+      } else if(c=='>') {
+        //upper = true;
         continue;
       }
   
@@ -623,62 +631,16 @@ protected:
       hc.m_y_move = move;
       hc.m_back = back;
       hc.m_bar = bar;
+      hc.m_font = font;
+      hc.m_char = c;
   
-      if(font==sg::special) {
-        hc.m_font = sg::latin;
-      //if(c=='A') {
-      //  hc.m_char = '';
-      //} else 
-        if(c=='B') {
-          hc.m_char = '|';
-      //} else if(c=='C') {
-      //  hc.m_char = '';
-        } else if(c=='D') {
-          hc.m_char = '$';
-        } else if(c=='E') {
-          hc.m_char = '!';
-        } else if(c=='F') {
-          hc.m_char = '#';
-        } else if(c=='G') {
-          hc.m_char = '>';
-        } else if(c=='H') {
-          hc.m_char = '?';
-      //} else if(c=='I') {
-      //  hc.m_char = '';
-        } else if(c=='J') {
-          hc.m_char = ':';
-        } else if(c=='K') {
-          hc.m_char = ';';
-        } else if(c=='L') {
-          hc.m_char = '<';
-        } else if(c=='M') {
-          hc.m_char = '[';
-        } else if(c=='N') {
-          hc.m_char = ']';
-  
-        } else if(c=='W') {
-          hc.m_char = '&';
-        } else if(c=='Y') {
-          hc.m_char = '%';
-        } else {
-          //FIXME : handle other characters.
-          hc.m_char = c;
-        }
-  
-      } else {
-        hc.m_font = font;
-        hc.m_char = c;
-      }
-  
-  
-      sed.push_back(hc);
+      a_sed.push_back(hc);
   
       back = false;
       bar = false;
     }
   
-    if(sed.size()) sed[sed.size()-1].m_cr = true;
-    return sed;
+    if(a_sed.size()) a_sed[a_sed.size()-1].m_cr = true;
   }
 
 protected:

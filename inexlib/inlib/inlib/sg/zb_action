@@ -457,7 +457,7 @@ protected:
       a_p.z = (zb::ZZ)a_z; //float -> double
     }
 
-    unsigned int npix(float a_size) { //a_size must be >1
+    unsigned int npix(float a_size) {
       // 0 -> 0
       // 1 -> 0
       // 2 -> 1    3x3  

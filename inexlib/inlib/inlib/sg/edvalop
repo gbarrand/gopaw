@@ -235,37 +235,34 @@ public:
     m_funcs.add(new cfunc_t("tanh",::tanh,in_domain_all));
   
     m_funcs.add(new cfunc_t("fabs",::fabs,in_domain_all));
-/*
-    m_funcs.add(new cfunc_t("abs",::fabs,in_domain_all));
-    m_funcs.add(new cfunc_t("rndm",::inlib_random_flat_shoot,
-                                       in_domain_all));
-    m_funcs.add(new cfunc_t("toint",::inlib_toint,
-                                       in_domain_all));
+
+  //m_funcs.add(new cfunc_t("abs",::fabs,in_domain_all));
+  //m_funcs.add(new cfunc_t("rndm",::inlib_random_flat_shoot,in_domain_all));
+  //m_funcs.add(new cfunc_t("toint",::inlib_toint,in_domain_all));
   
     //for OpenPAW/c_pawex20.kumac
-    m_funcs.add(new cfunc_t("int",::inlib_toint,in_domain_all)); 
+  //m_funcs.add(new cfunc_t("int",::inlib_toint,in_domain_all)); 
   
-    m_funcs.add(new val_func_nco());
-    m_funcs.add(new val_func_vsum());
+  //m_funcs.add(new val_func_nco());
+  //m_funcs.add(new val_func_vsum());
   
-    m_funcs.add(new val_func_pow());
-    m_funcs.add(new val_func_mod());
+  //m_funcs.add(new val_func_pow());
+  //m_funcs.add(new val_func_mod());
   
-    m_funcs.add(new val_func_array());
-    m_funcs.add(new val_func_expo());
-    m_funcs.add(new val_func_pol1());
+  //m_funcs.add(new val_func_array());
+  //m_funcs.add(new val_func_expo());
+  //m_funcs.add(new val_func_pol1());
 
-    m_funcs.add(new val_func_gauss());
-    m_funcs.add(new val_func_bw());
-    m_funcs.add(new val_func_cauchy());
+  //m_funcs.add(new val_func_gauss());
+  //m_funcs.add(new val_func_bw());
+  //m_funcs.add(new val_func_cauchy());
 
-    m_funcs.add(new val_func_pol2());
-    m_funcs.add(new val_func_pol3());
-    m_funcs.add(new val_func_pol4());
+  //m_funcs.add(new val_func_pol2());
+  //m_funcs.add(new val_func_pol3());
+  //m_funcs.add(new val_func_pol4());
   
     // For backward compatibility :
-    m_funcs.add(new val_func_breit());
-*/
+  //m_funcs.add(new val_func_breit());
   }
   virtual ~edvalop(){
     delete m_valop;

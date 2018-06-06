@@ -26,6 +26,7 @@ public:
   sf<float> marker_size;
   sf<float> font_size;
   sf_enum<sg::font_modeling> font_modeling;
+  sf_enum<winding_type> front_face;
   sf<lpat> line_pattern;
   sf_enum<sg::marker_style> marker_style;
   sf_enum<sg::area_style> area_style;
@@ -68,6 +69,7 @@ public:
       INLIB_ARG_FIELD_DESC(marker_size),
       INLIB_ARG_FIELD_DESC(font_size),
       INLIB_ARG_FIELD_DESC(font_modeling),
+      INLIB_ARG_FIELD_DESC(front_face),
       INLIB_ARG_FIELD_DESC(line_pattern),
       INLIB_ARG_FIELD_DESC(marker_style),
       INLIB_ARG_FIELD_DESC(area_style),
@@ -111,6 +113,7 @@ private:
     add_field(&marker_size);
     add_field(&font_size);
     add_field(&font_modeling);
+    add_field(&front_face);
     add_field(&line_pattern);
     add_field(&marker_style);
     add_field(&area_style);
@@ -153,6 +156,7 @@ public:
   ,marker_size(1)
   ,font_size(10)
   ,font_modeling(font_filled)
+  ,front_face(winding_ccw)
   ,line_pattern(line_solid)
   ,marker_style(marker_dot)
   ,area_style(area_solid)
@@ -198,6 +202,7 @@ public:
   ,marker_size(a_from.marker_size)
   ,font_size(a_from.font_size)
   ,font_modeling(a_from.font_modeling)
+  ,front_face(a_from.front_face)
   ,line_pattern(a_from.line_pattern)
   ,marker_style(a_from.marker_style)
   ,area_style(a_from.area_style)
@@ -242,6 +247,7 @@ public:
     marker_size = a_from.marker_size;
     font_size = a_from.font_size;
     font_modeling = a_from.font_modeling;
+    front_face = a_from.front_face;
     line_pattern = a_from.line_pattern;
     marker_style = a_from.marker_style;
     area_style = a_from.area_style;
@@ -288,6 +294,7 @@ public:
     sp.marker_size(marker_size.value());
     sp.font_size(font_size.value());
     sp.font_modeling(font_modeling.value());
+    sp.front_face(front_face.value());
     sp.line_pattern(line_pattern.value());
     sp.marker_style(marker_style.value());
     sp.area_style(area_style.value());
@@ -339,6 +346,7 @@ public:
     marker_size.value(sp.marker_size());
     font_size.value(sp.font_size());
     font_modeling.value(sp.font_modeling());
+    front_face = sp.front_face();
     line_pattern.value(sp.line_pattern());
     marker_style.value(sp.marker_style());
     area_style.value(sp.area_style());

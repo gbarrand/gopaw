@@ -13,7 +13,7 @@ namespace sg {
 class axes : public node {
   INLIB_NODE(axes,inlib::sg::axes,node)
 private:
-  static float default_infos_margin() {return 0.005f;} //0.005 or Wt
+  static float default_infos_margin() {return 0.005f;}
 public:
   sf<float> width;          //PAW XSIZ
   sf<float> height;         //PAW YSIZ

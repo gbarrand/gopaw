@@ -17,6 +17,7 @@
 #include "matrix"
 #include "normal"
 #include "holder"
+#include "tex_rect" //for plottable_img.
 
 #include "axis"
 #include "infos_box"
@@ -30,6 +31,7 @@
 #include "../tess_contour"
 #include "../geom3"
 #include "../spline"
+#include "../rtausmef"
 
 //#define INLIBS_SG_PLOTTER_TIMING
 #ifdef INLIBS_SG_PLOTTER_TIMING
@@ -46,7 +48,7 @@ private:
     static const std::string s_v("name entries mean rms fit_quality fit_ndf fit_parameters fit_errors");
     return s_v;
   }
-  static float default_infos_margin() {return 0.005f;} //0.005 or Wt
+  static float default_infos_margin() {return 0.005f;}
 public:
   sf<float> width;          //PAW XSIZ
   sf<float> height;         //PAW YSIZ
@@ -3054,6 +3056,8 @@ public:
           update_primitive_text(*ptext);
         } else if(plottable_box* pbox = safe_cast<plotprim,plottable_box>(*(*it))) {
           update_primitive_box(a_out,*pbox);
+        } else if(plottable_img* pimg = safe_cast<plotprim,plottable_img>(*(*it))) {
+          update_primitive_img(a_out,*pimg);
 	}
       }
     //}
@@ -6170,8 +6174,8 @@ protected: //rep
         float xdbin = xe - xx;
         float ydbin = ye - yy;
         for(int count=0;count<npt;count++) {
-          float xxx = xx + xdbin * (((float)::rand())/RAND_MAX);
-          float yyy = yy + ydbin * (((float)::rand())/RAND_MAX);
+          float xxx = xx + xdbin * m_rtausmef.shoot();
+          float yyy = yy + ydbin * m_rtausmef.shoot();
           xxx = verify_log(xxx ,xmin,dx  ,xlog);
           yyy = verify_log(yyy ,ymin,dy  ,ylog);
           if((xxx>=0)&&(xxx<=1)  &&
@@ -7623,7 +7627,7 @@ protected: //rep
       draw_style* ds = new draw_style;
       ds->style = draw_style::lines;
       ds->line_pattern = line_solid;
-      ds->line_width = 1;
+      ds->line_width = a_obj.m_line_width;
       //ds->line_pattern = m_title_style.line_pattern;
       //ds->line_width = m_title_style.line_width;
       sep->add(ds);
@@ -7951,7 +7955,52 @@ protected: //rep
     }
     
   }
+
+  void update_primitive_img(std::ostream& a_out,const plottable_img& a_obj){
   
+    float z = xy_depth.value()*1.1F;
+  
+    vec3f pos;
+    axis_2_data_frame(vec3f(a_obj.m_X,a_obj.m_Y,z),pos);
+    xx_2_yy(pos,pos);   //pos = center of image in axes coordinates. 
+    z = pos[2];
+
+    vec3f top;
+    axis_2_data_frame(vec3f(0,a_obj.m_Y+a_obj.m_HEIGHT*0.5f,0),top);
+    xx_2_yy(top,top);  //top = (o,y-top)  of image in axes coordinates.
+    float scale = 2.0f*(top[1]-pos[1]);
+    //float scale = a_obj.m_HEIGHT; //m_HEIGHT is then in page coordinate YSIZ.
+
+    const img<byte>& img = a_obj.m_img;
+
+  //::printf("debug : inlib::sg::plotter::update_primitive_img : %d %d %d : %g %g %g : %g : %g %g\n",
+  //    img.width(),img.height(),img.bpp(),
+  //    pos.x(),pos.y(),pos.z(),a_obj.m_HEIGHT,a_obj.m_THETA,a_obj.m_PHI);
+
+    separator* sep = new separator;
+  
+    rgba* mat = new rgba();
+    mat->color = colorf_white();
+    sep->add(mat);
+
+    normal* nm = new normal;
+    sep->add(nm);
+
+    matrix* _tsf = new matrix;
+    _tsf->set_translate(pos);
+    _tsf->mul_rotate(0,1,0,a_obj.m_THETA*fpi()/180.0f);
+    _tsf->mul_rotate(0,0,1,a_obj.m_PHI*fpi()/180.0f);
+    _tsf->mul_scale(scale,scale,1);
+    sep->add(_tsf);
+ 
+    tex_rect* _img = new tex_rect();
+    _img->img = img;
+    sep->add(_img);
+  
+    m_primitives_sep.add(sep);
+      
+  }
+
 protected: //etc
   // background is at z = 0.
   // last z items are text in infos, legend boxes that should be at xy_depth().
@@ -8437,6 +8486,7 @@ protected:
   group m_todel_group;
   std::vector<plotprim*> m_primitives;
   cmaps_t m_cmaps;
+  rtausmef m_rtausmef;
 };
 
 }}
