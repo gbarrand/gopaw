@@ -1,0 +1,22 @@
+MACRO hst
+  SET * ; OPT *       | Reset the defaults
+  session/delete *    | delete all objects.
+  SET XTIC 0.0001
+  SET YVAL 100.
+  SET YTIC 0.0001
+  SET XVAL 100.
+  CLR
+  * width = 2010, height = 1890, mean = 0.052, rms = 0.7
+  ZONE 1 1
+  NULL 0 2 0 2
+  h/file 1 data_hst-img-2010x1890.fits
+  ldir  | to see available objects in the file.
+  * in the below IMAGE_HDU command :
+  *  - hdu = 1, slice = 0
+  *  - lut(min,max) = -0.04 0.4, color map = colbr32
+  *  - pos = 1 0.5, size = 1 0.9 (in axes coordinates)
+  *  - angles(theta,phi) = 0 0
+  IMAGE_HDU 1 0 -0.04 0.4 colbr32 1 0.5 1 0.9 0 0
+  IMAGE_HDU 1 1 -0.04 0.4 colrj32 1 1.5 1 0.9 0 0   | slice = 1, pos = 1 1.5
+  close 1
+RETURN

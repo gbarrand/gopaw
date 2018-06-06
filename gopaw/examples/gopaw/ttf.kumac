@@ -1,0 +1,19 @@
+MACRO ttf
+* Copyright (C) 2018, Guy Barrand. All rights reserved.
+* See the file gopaw.license for terms.
+**************************************************************************
+* Use freetype font :                                         *
+**************************************************************************
+exec alldef
+* use TTF fonts (same indexing as ROOT). Here 62 = arialbd.ttf.
+set VFON 62
+set GFON 62
+set TFON 62
+set CFON 62
+set LFON 62
+set XMGL 1.7
+opt stat
+h/file 1 pawdemo.root
+h/plot h100
+close 1
+return

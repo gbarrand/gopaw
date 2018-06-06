@@ -1,0 +1,14 @@
+MACRO sdss
+  SET * ; OPT *          | Reset the defaults
+  session/delete *       | delete all objects.
+  SET XTIC 0.0001
+  SET YVAL 100.
+  SET YTIC 0.0001
+  SET XVAL 100.
+  CLR
+  NULL 0 2 0 2
+  * width = 2048, height = 1489, min = 1053, max = 32767, mean = 1091.2, rms = 203.423
+  h/file 1 data_fpC-005820-g1-0024.fits
+  IMAGE_HDU 1 0 990 1190 colbr32 1 1 1 1 0 0
+  close 1
+RETURN

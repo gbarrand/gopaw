@@ -1,0 +1,107 @@
+MACRO root_def
+
+* Copyright (C) 2018, Guy Barrand. All rights reserved.
+* See the file gopaw.license for terms.
+
+*//////////////////////////////////////////////////////
+*/// Have the ROOT style. /////////////////////////////
+*//////////////////////////////////////////////////////
+
+*//////////////////////////////////////////////////////
+*//  We try to have what is in :
+*//   inlib/xml/viewplot.style/ROOT_default
+*// but by using the SET and OPT commands.
+*//
+*//  Since in inlib/sg/plotter, the default size is
+*// 1x1 and that it is 20x20 in gopaw (as in CERN-PAW),
+*// all values of viewplot.style are multiplied by 20.
+*// 
+*//  VSIZ and ASIZ are multipied by 0.6 so that ttf font
+*// size matches the hershey one.
+*//////////////////////////////////////////////////////
+
+opt RTIT
+opt RSTA
+
+* TTFM : 1 outline, 2 filled, 3 pixmap (default).
+*set TTFM 1
+*set TTFM 2
+
+*//////////////////////////////////////////////////////
+*/// x axis : /////////////////////////////////////////
+*//////////////////////////////////////////////////////
+*<style name="x_axis">
+*<color>black</color>
+set XCOL 1
+*<line_width>1</line_width>
+set XWID 1
+*<divisions>510</divisions>
+set NDVX 510
+*<title_to_axis>0.05</title_to_axis>
+*set YLAB 1.0
+set YLAB 0.9
+*<title_height>0.04</title_height>
+*set ASIZ 0.8
+set ASIZ 0.48
+*<label_height>0.04</label_height>
+*set VSIZ 0.8
+set VSIZ 0.48
+*<label_to_axis>0.005</label_to_axis>
+set YVAL 0.1
+*<tick_length>0.03</tick_length>
+set XTIC 0.6
+
+*<style name="x_axis.labels_style"> 
+*<scale>0.6</scale>
+*<font>arialbd.ttf</font> <!-- ROOT_62 -->
+set VFON 62
+*<front_face>cw</front_face>
+*<smoothing>true</smoothing>
+
+*<style name="x_axis.title_style">
+*<scale>0.6</scale>
+*<font>arialbd.ttf</font> <!-- ROOT_62 -->
+set LFON 62
+*<front_face>cw</front_face>
+*<smoothing>true</smoothing>
+
+*//////////////////////////////////////////////////////
+*/// y axis : /////////////////////////////////////////
+*//////////////////////////////////////////////////////
+*<style name="y_axis">
+*<color>black</color>
+set YCOL 1
+*<line_width>1</line_width>
+set YWID 1
+*<divisions>510</divisions>
+set NDVY 510
+*<title_to_axis>0.07</title_to_axis>
+set XLAB 1.4
+*<title_height>0.04</title_height>
+*set ASIZ 0.8
+set ASIZ 0.48
+*<label_height>0.04</label_height>
+*set VSIZ 0.8
+set VSIZ 0.48
+*<label_to_axis>0.005</label_to_axis>
+set XVAL 0.1
+*<tick_length>0.03</tick_length>
+set YTIC 0.6
+
+*<style name="y_axis.labels_style"> 
+*<scale>0.6</scale>
+*<font>arialbd.ttf</font> <!-- ROOT_62 -->
+set VFON 62
+*<front_face>cw</front_face>
+*<smoothing>true</smoothing>
+
+*<style name="y_axis.title_style">
+*<scale>0.6</scale>
+*<font>arialbd.ttf</font> <!-- ROOT_62 -->
+set LFON 62
+*<front_face>cw</front_face>
+*<smoothing>true</smoothing>
+*//////////////////////////////////////////////////////
+*//////////////////////////////////////////////////////
+*//////////////////////////////////////////////////////
+RETURN

@@ -1,0 +1,27 @@
+MACRO pawdemo
+* Copyright (C) 2018, Guy Barrand. All rights reserved.
+* See the file gopaw.license for terms.
+**************************************************************************
+* Histogram and ntuple from a ROOT file.                                         *
+**************************************************************************
+exec alldef
+exec ttf
+opt stat
+ZONE 2 3
+h/file 1 data_pawdemo.root
+ldir  * list objects in the file.
+h/plot h100
+cd //lun1/BS   * change current directory in the file.
+ldir
+h/plot h110
+**************************************************************************
+* work on an ntuple :
+**************************************************************************
+cd //lun1/STAFF
+n/print h10
+n/plot h10.Category
+n/plot h10.Age
+n/plot h10.Age%Cost
+**************************************************************************
+close 1
+return

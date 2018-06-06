@@ -1,0 +1,14 @@
+exec alldef
+
+set MSCF 2
+
+null 0 2 0 2
+
+atit 'm(K^+![p]^-!) "M#GeV/c^2!"N#' 'Entries'	   
+set chhe 0.5
+itx 0.2 1.6 'B?d! "5# K^+![p]^-!'
+itx 0.2 1.4 'final selection'
+
+itx 0.2 1.2 'Maxwell-quantum formula with E?i!=10.6 eV'
+itx 0.2 1.0 'E?[g]!'
+itx 0.2 0.8 'n(E?[g]!)'
