@@ -13,7 +13,7 @@ set CFON 62
 set LFON 62
 set XMGL 1.7
 opt stat
-h/file 1 pawdemo.root
+h/file 1 data_pawdemo.root
 h/plot h100
 close 1
 return
