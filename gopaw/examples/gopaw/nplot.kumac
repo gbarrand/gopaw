@@ -12,7 +12,6 @@ ntuple/plot 10.B%A
 ntuple/plot 10.B/2%A
 ntuple/cut $1 2*B
 ntuple/plot 10.A-$1
-close 10
 zone
 hi/de 10
 RETURN
