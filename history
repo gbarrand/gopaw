@@ -1,3 +1,4 @@
+- examples/gopaw/nplot.kumac : remove 'close 10'.
 - examples/gopaw/pawdemo.kumac : do not use ttf.kumac.
 - examples/gopaw/ttf.kumac : pawdemo.root => data_pawdemo.root
 
