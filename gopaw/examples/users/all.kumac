@@ -67,7 +67,7 @@ synchronize
 wait 'wait...' 2
 
 mess "oblique_c.kumac..."
-exec oblique_py.kumac
+exec oblique_c.kumac
 render
 synchronize
 wait 'wait...' 2
