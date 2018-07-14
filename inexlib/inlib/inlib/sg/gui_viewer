@@ -4638,8 +4638,9 @@ public:
   const args& argcv() const {return m_argcv;}
   args& argcv() {return m_argcv;}
   
-  //const dumpers_t& dumpers() const {return m_dumpers;}
-  //dumpers_t& dumpers() {return m_dumpers;}
+//const dumpers_t& dumpers() const {return m_dumpers;}
+  dumpers_t& dumpers() {return m_dumpers;}             //used in nemoview.
+  
   void add_dumper(const std::string& a_key,base_dumper* a_dumper) { //take ownership of a_dumper.
     add_unique(m_dumpers,a_key,a_dumper,true); //true=delete existing dumper on a_key.
   }
