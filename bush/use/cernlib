@@ -113,6 +113,10 @@ if [ "${use_sys_cernlib}" = "yes" ] ; then
     f77_for_C_libs="-lcrypt /usr/lib/i386-linux-gnu/libgfortran.so.3.0.0"
     #f77_end_libs="/usr/lib/i386-linux-gnu/libgfortran.so.3.0.0"
 
+ #elif [ "`uname -n`" = barrand-centos7.lal.in2p3.fr ] ; then 
+ #   cernlib_home=/cern/2004/lib64
+ #   f77_for_C_libs="-lcrypt -l:libgfortran.so.3.0.0"
+
   else
 
     if [ -d /cern/pro/lib ] ; then
