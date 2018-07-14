@@ -53,6 +53,10 @@
 #  define SLASHES "\\"
 #endif
 
+#ifdef ANDROID  /*G.Barrand*/
+#define NO_EDIT_SERVER
+#endif
+
 /*
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #  define MACHINE_NAME "CYGWIN"
