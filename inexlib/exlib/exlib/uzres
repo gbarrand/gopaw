@@ -12,6 +12,89 @@
 
 namespace exlib {
 
+inline bool unfold_res_file(std::ostream& a_out,
+                            const std::string& a_env,
+                            const std::string& a_file,
+                            const std::string& a_expected_dir, //relative
+                            const std::string& a_data_dir,
+                            const std::string& a_tmp_dir,
+                            bool a_permanent,
+                            const std::string& a_app,
+                            std::vector<std::string>& a_tmp_dirs) {
+ {std::string env;
+  if(inlib::get_env(a_env,env)) {
+    bool is_dir;
+    inlib::dir::is_a(env,is_dir);
+    if(!is_dir) {
+      a_out << "exlib::unfold_res_file :"
+            << " env variable " << inlib::sout(a_env) << " exists, but value " << inlib::sout(env)
+	    << " points to an invalid directory." << std::endl;
+    } else {
+      a_out << "exlib::unfold_res_file :"
+            << " env variable " << inlib::sout(a_env) << " exists, its value is " << inlib::sout(env) << "."
+	    << std::endl;
+    }
+    return false;
+  }}
+
+ {bool is_dir;
+  std::string in_data_dir = a_data_dir+inlib::sep()+a_expected_dir;
+  inlib::dir::is_a(in_data_dir,is_dir);
+  if(is_dir) {
+    //user had already installed one in the app data dir.
+    if(!inlib::put_env(a_env,in_data_dir)) {
+      a_out << "exlib::unfold_res_file : putenv of " << a_env << " failed." << std::endl;
+      return false;
+    }
+    return true;
+  }}
+
+  std::string _tmp_dir;
+  if(a_permanent) {
+  
+    bool is_dir;
+    std::string in_tmp_dir = a_tmp_dir+inlib::sep()+a_expected_dir;
+    inlib::dir::is_a(in_tmp_dir,is_dir);
+    if(is_dir) {
+      //one already exists in a_tmp_dir.
+      if(!inlib::put_env(a_env,in_tmp_dir)) {
+        a_out << "exlib::unfold_res_file : putenv of " << a_env << " failed." << std::endl;
+        return false;
+      }
+      return true;
+    }
+
+    _tmp_dir = a_tmp_dir;
+    
+  } else {
+    if(!inlib::tmpname(a_tmp_dir,a_app,"",_tmp_dir)) {
+      a_out << "exlib::unfold_res_file : can't get a tmpname." << std::endl;
+      return false;
+    }
+    if(!inlib::mkdirs_from(a_out,a_tmp_dir,inlib::base_name(_tmp_dir))){
+      a_out << "exlib::unfold_res_file : mkdirs_from failed." << std::endl;
+      return false;
+    }
+    a_tmp_dirs.push_back(_tmp_dir);
+
+  }
+
+  std::string env_path = _tmp_dir+inlib::sep()+a_expected_dir;
+  
+  if(!exlib::unzip_from(a_out,_tmp_dir,a_file,env_path)) {
+    a_out << "exlib::unfold_res_file : unzip_from failed." << std::endl;
+    return false;
+  }
+
+  if(!inlib::put_env(a_env,env_path)) {
+    a_out << "exlib::unfold_res_file : putenv of " << a_env << " failed." << std::endl;
+    return false;
+  }
+  
+  return true;
+}
+
+/*
 inline bool unfold_res_file_tmp(std::ostream& a_out,
                        const std::string& a_env,
                        const std::string& a_app,
@@ -119,6 +202,7 @@ inline bool unfold_res_file_iOS(std::ostream& a_out,
   
   return true;
 }
+*/
 
 }
 
@@ -127,14 +211,13 @@ inline bool unfold_res_file_iOS(std::ostream& a_out,
 namespace exlib {
 
 // for our g4 apps :
+/*
 inline bool unfold(std::ostream& a_out,
                    const std::string& a_data_dir,
                    const std::string& a_res_dir,
                    const std::string& a_tmp_dir,
                    std::vector<std::string>& a_tmp_dirs,
                    const std::string& a_zip,const std::string& a_env,const std::string& a_tmp_prefix,const std::string& a_dir) {
-  // The AppleStore does not want more than 6 Mbytes in Documents dir
-  // coming from the app then we unfold res file in /tmp.
   std::string file = a_res_dir;
   file += inlib::sep();    
   file += a_zip;
@@ -146,6 +229,26 @@ inline bool unfold(std::ostream& a_out,
   } else {
     return unfold_res_file_tmp(a_out,a_env,a_tmp_prefix,file,a_dir,a_data_dir,a_tmp_dir,a_tmp_dirs);
   }
+}
+*/
+
+inline bool unfold(std::ostream& a_out,
+                   const std::string& a_data_dir,
+                   const std::string& a_res_dir,
+                   const std::string& a_tmp_dir,
+                   std::vector<std::string>& a_tmp_dirs,
+                   const std::string& a_zip,const std::string& a_env,const std::string& a_tmp_prefix,
+		   const std::string& a_dir) {
+  // The iOS AppleStore does not want more than 6 Mbytes in Documents dir
+  // coming from the app, then we unfold res file in a_tmp_dir (we assume
+  // also that the res dir is read only). On iOS and Android, the file is
+  // permanent in the a_tmp_dir area of the app, it is not deleted when
+  // quiting the app. 
+  std::string file = a_res_dir;
+  file += inlib::sep();    
+  file += a_zip;
+  bool permanent = inlib::device::is_iOS()||inlib::device::is_Android()?true:false;
+  return unfold_res_file(a_out,a_env,file,a_dir,a_data_dir,a_tmp_dir,permanent,a_tmp_prefix,a_tmp_dirs);
 }
 
 }
