@@ -105,29 +105,35 @@ public:
       if(!entries(_entries)) {
         m_out << "exlib::hdf5::store::~store : not same entries on all columns. Write 0." << std::endl;
       }
-      if(!write_scalar<inlib::uint64>(m_group,s_entries(),_entries)) {
-        m_out << "exlib::hdf5::store::~store : write_scalar(entries) failed." << std::endl;
+      if(m_group<0) { //constructor may have failed.
+      } else {
+        if(!write_scalar<inlib::uint64>(m_group,s_entries(),_entries)) {
+          m_out << "exlib::hdf5::store::~store : write_scalar(entries) failed." << std::endl;
+        }
+        if(!write_scalar<unsigned int>(m_group,s_columns(),m_pagess.size())) {
+          m_out << "exlib::hdf5::store::~store : write_scalar(columns) failed." << std::endl;
+        }
+       {std::vector<std::string> names;
+        inlib_vforcit(pages*,m_pagess,it) names.push_back((*it)->name());
+     //{m_out << "debug : write : names :" << std::endl;
+     // inlib_vforcit(std::string,names,it) m_out << *it << std::endl;}
+        if(!write_array_string(m_group,s_names(),names)) {
+          m_out << "exlib::hdf5::store::~store : write_array_string(names) failed." << std::endl;
+        }}
+       {std::vector<std::string> TFORMs;
+        inlib_vforcit(pages*,m_pagess,it) TFORMs.push_back((*it)->form());
+     //{m_out << "debug : write : TFORMs :" << std::endl;
+     // inlib_vforcit(std::string,TFORMs,it) m_out << *it << std::endl;}
+        if(!write_array_string(m_group,s_forms(),TFORMs)) {
+          m_out << "exlib::hdf5::store::~store : write_array_string(tforms) failed." << std::endl;
+        }}
       }
-      if(!write_scalar<unsigned int>(m_group,s_columns(),m_pagess.size())) {
-        m_out << "exlib::hdf5::store::~store : write_scalar(columns) failed." << std::endl;
-      }
-     {std::vector<std::string> names;
-      inlib_vforcit(pages*,m_pagess,it) names.push_back((*it)->name());
-   //{m_out << "debug : write : names :" << std::endl;
-   // inlib_vforcit(std::string,names,it) m_out << *it << std::endl;}
-      if(!write_array_string(m_group,s_names(),names)) {
-        m_out << "exlib::hdf5::store::~store : write_array_string(names) failed." << std::endl;
-      }}
-     {std::vector<std::string> TFORMs;
-      inlib_vforcit(pages*,m_pagess,it) TFORMs.push_back((*it)->form());
-   //{m_out << "debug : write : TFORMs :" << std::endl;
-   // inlib_vforcit(std::string,TFORMs,it) m_out << *it << std::endl;}
-      if(!write_array_string(m_group,s_forms(),TFORMs)) {
-        m_out << "exlib::hdf5::store::~store : write_array_string(tforms) failed." << std::endl;
-      }}
     }
     inlib::safe_clear(m_pagess);
-    ::H5Gclose(m_group);
+    if(m_group<0) { //constructor may have failed.
+    } else {
+      ::H5Gclose(m_group);
+    }
 #ifdef INLIB_MEM
     inlib::mem::decrement(s_class().c_str());
 #endif
