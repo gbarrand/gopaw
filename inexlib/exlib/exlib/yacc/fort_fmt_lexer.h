@@ -1,3 +1,6 @@
+// Copyright (C) 2010, Guy Barrand. All rights reserved.
+// See the file exlib.license for terms.
+
 #ifndef exlib_fort_fmt_lexer_h
 #define exlib_fort_fmt_lexer_h 
 
