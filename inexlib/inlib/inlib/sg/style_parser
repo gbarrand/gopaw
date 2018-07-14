@@ -1190,7 +1190,7 @@ public:
           return false;
         }
 
-      } else if( (word0=="line_pattern") || (word0=="line_pattern") ) {
+      } else if( (word0=="pattern") || (word0=="line_pattern") ) {
         if(!check_2(wordn,a_s,line,a_out)) return false;
         const std::string& word1 = ws[1];
         unsigned long ul;
