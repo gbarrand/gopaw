@@ -1,8 +1,8 @@
 // Copyright (C) 2010, Guy Barrand. All rights reserved.
 // See the file exlib.license for terms.
 
-#ifndef exlib_evaluator_h
-#define exlib_evaluator_h
+#ifndef exlib_evaluator
+#define exlib_evaluator
 
 #ifdef INLIB_MEM
 #include <inlib/mem>
