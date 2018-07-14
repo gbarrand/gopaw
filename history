@@ -1,5 +1,5 @@
 2.0.0 :
-- for root, HDF5 and fits ntuples, avoid a copy on an aida::ntuple.
+- IMPORTANT : for ntuple from root, HDF5 and fits files, avoid a copy on an aida::ntuple.
 - examples/gopaw/nplot.kumac : remove 'close 10'.
 - examples/gopaw/pawdemo.kumac : do not use ttf.kumac.
 - examples/gopaw/ttf.kumac : pawdemo.root => data_pawdemo.root
