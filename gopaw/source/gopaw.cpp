@@ -177,19 +177,10 @@ int main(int argc,char** argv){
   std::string file = res_dir;
   file += inlib::sep();    
   file += "python_2_7_lib_py.zip";    
-  if(inlib::device::is_iOS()){
-    // no way to cleanup tmp file at exit (because we can't be warned
-    // when the app is killed), then we store in app tmp dir but as
-    // if done permanently.
-    if(!exlib::unfold_res_file_iOS(std::cout,s_PYTHONHOME(),file,"python_2_7",data_dir,tmp_dir)){
-      std::cout << "unfold_res_file_iOS() : failed." << std::endl;
-      return EXIT_FAILURE;
-    }
-  } else {
-    if(!exlib::unfold_res_file_tmp(std::cout,s_PYTHONHOME(),app_name+"_",file,"python_2_7",data_dir,tmp_dir,tmp_dirs)){
-      std::cout << "unfold_res_file_tmp() : failed." << std::endl;
-      return EXIT_FAILURE;
-    }
+  bool permanent = inlib::device::is_iOS()||inlib::device::is_Android()?true:false;
+  if(!exlib::unfold_res_file(std::cout,s_PYTHONHOME(),file,"python_2_7",data_dir,tmp_dir,permanent,app_name+"_",tmp_dirs)){
+    std::cout << "exlib::unfold_res_file() : failed." << std::endl;
+    return EXIT_FAILURE;
   }}
   if(!inlib::is_env(s_PYTHONHOME())) {
     std::cout << "env variable PYTHONHOME not defined." << std::endl;
