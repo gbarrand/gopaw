@@ -20,7 +20,7 @@ inline bool aida2root(std::ostream& a_out,inlib::aida::ntuple& a_aida,inlib::wro
   std::vector<aida_col_t*> aida_cols;
   std::vector<root_col_t*> root_cols;
 
-  inlib_vforcit(inlib::aida::base_col*,a_aida.cols(),it) {
+  inlib_vforcit(inlib::aida::base_col*,a_aida.columns(),it) {
     aida_col_t* aida_col = inlib::safe_cast<inlib::aida::base_col,aida_col_t>(*(*it));
     if(!aida_col) {
       a_out << "aida2root : an aida_col is not of type double." << std::endl;
