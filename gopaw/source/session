@@ -373,7 +373,7 @@ inline void region_set_automated(inlib::sg::plotter& a_plotter,const HIST& a_his
   bool automated = true;
   std::string svalue;
   if(a_hist.annotation("opaw.value.automated",svalue)) {
-    if(svalue!="") {
+    if(svalue.size()) {
       if(!inlib::tob(svalue,automated)) automated = true;
     }
   }
@@ -1051,7 +1051,7 @@ public:
       inlib::justify(s1,30,inlib::side_left);
       a_out << "| " << s1 << " |" << std::endl;        
       inlib::strip(s2);
-      if(s2!="") {
+      if(s2.size()) {
         inlib::justify(s2,30,inlib::side_left);
         a_out << "|             |               |               | " << s2 << " |" << std::endl;
       }}
@@ -1106,7 +1106,7 @@ public:
       inlib::justify(s1,31,inlib::side_left);
       a_out << "| " << s1 << " |" << std::endl;        
       inlib::strip(s2);
-      if(s2!="") {
+      if(s2.size()) {
         inlib::justify(s2,31,inlib::side_left);
         a_out << "|             |             |               | " << s2 << " |" << std::endl;
       }}
