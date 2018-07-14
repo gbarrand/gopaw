@@ -189,6 +189,12 @@ render
 synchronize
 wait 'wait...' 2
 
+mess "B4_rstyle.kumac..."
+exec B4_ntuple.kumac
+render
+synchronize
+wait 'wait...' 2
+
 *////////////////////////////////////////
 */// fits related : /////////////////////
 *////////////////////////////////////////
