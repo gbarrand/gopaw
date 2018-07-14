@@ -252,14 +252,7 @@ bool histo_find(gopaw::session& a_session,const std::string& a_NAME,HIST*& a_his
 }
 
 #ifdef APP_USE_HDF5
-namespace tools {
-namespace histo {
-class h1d : public inlib::histo::h1d {public:INLIB_SCLASS(tools::histo::h1d)};
-class h2d : public inlib::histo::h2d {public:INLIB_SCLASS(tools::histo::h2d)};
-//class h3d : public inlib::histo::h3d {public:INLIB_SCLASS(tools::histo::h3d)};
-//class p1d : public inlib::histo::p1d {public:INLIB_SCLASS(tools::histo::p1d)};
-//class p2d : public inlib::histo::p2d {public:INLIB_SCLASS(tools::histo::p2d)};
-}}
+#include <inlib/tools_histo>
 #endif
 
 namespace gopaw {
@@ -404,38 +397,38 @@ inline inlib::histo::h2d* h2d_find(gopaw::session& a_session,const std::string& 
 
 }
 
-#include "root_aida"
 #include <inlib/rroot/file>
 #include <inlib/rroot/rall>
+#include <inlib/rroot/ntuple>
 
 #ifdef APP_USE_HDF5
-#include "hdf5_aida"
+#include <exlib/hdf5/rntuple>
 #endif
 
 #ifdef APP_USE_CFITSIO
-#include "fits_aida"
+#include <exlib/rcfitsio_ntuple>
 #endif
 
 namespace gopaw {
 
-inline inlib::aida::ntuple* tuple_find(gopaw::session& a_session,const std::string& a_NAME) {
+inline inlib::read::intuple* intuple_find(gopaw::session& a_session,const std::string& a_NAME) {
   std::ostream& out = a_session.out();
 
   std::string path;
   bool is_unit;
   int unit;
   if(!is_unit_path(a_NAME,is_unit,path,unit)) {
-    out << "tuple_find : syntax error in " << inlib::sout(a_NAME) << std::endl;
+    out << "intuple_find : syntax error in " << inlib::sout(a_NAME) << std::endl;
     return 0;
   }
   if(inlib::dir_name(path).size()) {
-    a_session.out() << "tuple_find : a_NAME " << inlib::sout(a_NAME)
+    a_session.out() << "intuple_find : a_NAME " << inlib::sout(a_NAME)
                     << " : do not expect a directory in " << inlib::sout(path) << "." << std::endl;
     return 0;
   }    
   if(!is_unit) {
-    inlib::aida::ntuple* tuple;
-    if(a_session.find_object(path,tuple)) return tuple;
+    inlib::read::intuple* ntuple;
+    if(a_session.find_object(path,ntuple)) return ntuple;
   }
 
  {inlib::rroot::file* root_file = 0;
@@ -449,20 +442,28 @@ inline inlib::aida::ntuple* tuple_find(gopaw::session& a_session,const std::stri
     //inlib::rroot::directory& dir = root_file->dir();
     inlib_vforcit(inlib::rroot::key*,root_dir->keys(),it) {
       if((*it)->object_name()==path) {
-        inlib::rroot::fac fac(out);
-        inlib::rroot::tree* tree = inlib::rroot::key_to_tree(*root_file,fac,*(*it),false);
+        inlib::rroot::fac* fac = new inlib::rroot::fac(out);
+        inlib::rroot::tree* tree = inlib::rroot::key_to_tree(*root_file,*fac,*(*it),false);
         if(tree) { //object may be not a rroot::tree.
-          inlib::aida::ntuple* aida_tuple;
-          if(!root2aida(out,*tree,aida_tuple)) {delete tree;return 0;}
-          delete tree;
+          //a_session.out() << "intuple_find : root : found object " << inlib::sout(path) << "." << std::endl;
+	  inlib::rroot::fac_tree_ntuple* ntuple = new inlib::rroot::fac_tree_ntuple(fac,tree); //give ownerhsip of fac,tree.
+          if(!ntuple->initialize(a_session.out(),inlib::ntuple_binding(),true)) { //IMPORTANT : true = enforce double.
+            a_session.out() << "intuple_find : for " << inlib::sout(path)
+	                    << ", inlib::rroot::ntuple::initialize() failed." << std::endl;
+            delete ntuple; //it will delete fac,tree.
+            return 0;
+          }
+          //a_session.out() << "intuple_find : root : #columns " << ntuple->number_of_columns() << "." << std::endl;
           a_session.remove_handle((*it)->object_name());
-          a_session.add_handle((*it)->object_name(),aida_tuple);
-          return aida_tuple;
-        }
+          a_session.add_handle((*it)->object_name(),ntuple);
+          return ntuple;
+        } else {
+	  delete fac;
+	}
       }
     }
   }}
-  
+
 #ifdef APP_USE_HDF5
  {hid_t hdf5_file = (-1);
   hid_t hdf5_dir = (-1);
@@ -472,55 +473,16 @@ inline inlib::aida::ntuple* tuple_find(gopaw::session& a_session,const std::stri
     if(!a_session.find_hdf5_file(unit,hdf5_file,hdf5_dir)) {}
   }
   if((hdf5_file!=(-1))&&(hdf5_dir!=(-1))) {
-    //a_session.out() << "tuple_find : hdf5 : search object " << inlib::sout(path) << " ..." << std::endl;
+    //a_session.out() << "intuple_find : hdf5 : search object " << inlib::sout(path) << " ..." << std::endl;
     const std::string& object_name = path;
     if(exlib::hdf5::group_exists(hdf5_dir,object_name)) {
-      //a_session.out() << "tuple_find : hdf5 : found object " << inlib::sout(path) << "." << std::endl;
-      exlib::hdf5::ntuple ntuple(a_session.out(),hdf5_dir,object_name);
-      //a_session.out() << "tuple_find : hdf5 : found : columns " << ntuple.columns().size() << std::endl;
-      inlib::aida::ntuple* aida_tuple;
-      if(!hdf52aida(out,ntuple,aida_tuple)) return 0;
+      //a_session.out() << "intuple_find : hdf5 : found object " << inlib::sout(path) << "." << std::endl;
+      exlib::hdf5::rntuple* ntuple = new exlib::hdf5::rntuple(a_session.out(),hdf5_dir,object_name,true); //true = enforce double.
+      //a_session.out() << "intuple_find : hdf5 : found : columns " << ntuple.columns().size() << std::endl;
       a_session.remove_handle(object_name);
-      a_session.add_handle(object_name,aida_tuple);
-      return aida_tuple;
+      a_session.add_handle(object_name,ntuple);
+      return ntuple;
     }      
-  /*
-    std::vector<std::string> words;
-    inlib::words(path,"/",false,words);
-    if(!words.size()) {
-      a_session.out() << "tuple_find : hdf5 : bad path " << inlib::sout(path) << "." << std::endl;
-    } else {
-      std::vector<hid_t> dirs;
-      hid_t directory = hdf5_file;
-     {for(unsigned index = 0;index<(words.size()-1);index++){
-        hid_t dir = exlib_H5Gopen(directory,words[index].c_str());
-        if(dir<0) {
-          a_session.out() << "tuple_find : hdf5 : directory " << inlib::sout(words[index]) << " not found." << std::endl;
-	  directory = (-1);
-	  break;
-        }
-        if(dir!=hdf5_file) dirs.push_back(dir);
-        directory = dir;	
-      }}
-      if(directory<0) {
-      } else {
-        const std::string& sobj = words[words.size()-1];
-        a_session.out() << "tuple_find : hdf5 : search object " << inlib::sout(sobj) << ", path " << inlib::sout(path) << std::endl;
-        exlib::hdf5::ntuple ntuple(a_session.out(),directory,"rg_rbw");
-        a_session.out() << "tuple_find : hdf5 : found : columns " << ntuple.columns().size() << std::endl;
-        inlib::aida::ntuple* aida_tuple;
-        if(!hdf52aida(out,ntuple,aida_tuple)) {
-         {inlib_vforcit(hid_t,dirs,it) ::H5Gclose(*it);}
-	  return 0;
-        }	  
-        a_session.remove_handle(sobj);
-        a_session.add_handle(sobj,aida_tuple);
-       {inlib_vforcit(hid_t,dirs,it) ::H5Gclose(*it);}
-        return aida_tuple;
-      }
-     {inlib_vforcit(hid_t,dirs,it) ::H5Gclose(*it);}
-    }
-    */
   }}
 #endif //APP_USE_HDF5
 
@@ -532,22 +494,61 @@ inline inlib::aida::ntuple* tuple_find(gopaw::session& a_session,const std::stri
     if(!a_session.find_fits_file(unit,fits_file)) {}
   }
   if(fits_file) {
-    //a_session.out() << "tuple_find : fits : search object " << inlib::sout(path) << " ..." << std::endl;
+    //a_session.out() << "intuple_find : fits : search object " << inlib::sout(path) << " ..." << std::endl;
     const std::string& object_name = path;
     unsigned int hdu;
     if(!inlib::to<unsigned int>(object_name,hdu)) {
-      a_session.out() << "tuple_find : can't convert string " << inlib::sout(object_name)
+      a_session.out() << "intuple_find : can't convert string " << inlib::sout(object_name)
                       << " to an HDU (unsigned int)." << std::endl;
       return 0;
     }
-    inlib::aida::ntuple* aida_tuple;
-    if(!fits2aida(out,fits_file->path(),hdu,aida_tuple)) return 0;
-    //a_session.out() << "tuple_find : file : found : columns " << aida_tuple->columns() << std::endl;
+    exlib::rcfitsio::ntuple* ntuple = new exlib::rcfitsio::ntuple(a_session.out(),fits_file->path(),hdu);
+    if(!ntuple->initialize(true)) { //IMPORTANT : true = enforce double.
+      a_session.out() << "intuple_find : for hdu " << hdu << ", exlib::rcfitsio::initialize() failed." << std::endl;
+      return 0;
+    }
     a_session.remove_handle(object_name);
-    a_session.add_handle(object_name,aida_tuple);
-    return aida_tuple;
+    a_session.add_handle(object_name,ntuple);
+    return ntuple;
   }}
 #endif //APP_USE_CFITSIO
+
+  return 0;
+}
+
+}
+
+#include "root_aida"
+
+#ifdef APP_USE_HDF5
+#include "hdf5_aida"
+#endif
+
+#ifdef APP_USE_CFITSIO
+#include "fits_aida"
+#endif
+
+namespace gopaw {
+
+inline inlib::aida::ntuple* aida_ntuple_find(gopaw::session& a_session,const std::string& a_NAME) {
+  std::ostream& out = a_session.out();
+
+  std::string path;
+  bool is_unit;
+  int unit;
+  if(!is_unit_path(a_NAME,is_unit,path,unit)) {
+    out << "aida_ntuple_find : syntax error in " << inlib::sout(a_NAME) << std::endl;
+    return 0;
+  }
+  if(inlib::dir_name(path).size()) {
+    a_session.out() << "aida_ntuple_find : a_NAME " << inlib::sout(a_NAME)
+                    << " : do not expect a directory in " << inlib::sout(path) << "." << std::endl;
+    return 0;
+  }    
+  if(!is_unit) {
+    inlib::aida::ntuple* tuple;
+    if(a_session.find_object(path,tuple)) return tuple;
+  }
 
   return 0;
 }
@@ -607,7 +608,7 @@ inline exlib::fits_image::img* image_find(gopaw::session& a_session,const std::s
     inlib::mem::decrement(inlib::s_new().c_str());
 #endif
     exlib::fits_image::img* img = new exlib::fits_image::img(width,height,bitpix,buffer,true);
-    //out << "tuple_find : file : found : columns " << aida_tuple->columns() << std::endl;
+    //out << "aida_ntuple_find : file : found : columns " << aida_tuple->columns() << std::endl;
     a_session.remove_handle(object_name);
     a_session.add_handle(object_name,img);
     return img;
