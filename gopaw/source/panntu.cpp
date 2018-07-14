@@ -27,8 +27,8 @@ inline std::string sjust(T a_value,unsigned int a_size,inlib::side a_side = inli
 
 #include <exlib/yacc/evaluator>
 
-template <class EVALUATOR,class T>
-inline bool project(std::ostream& a_out,inlib::aida::ntuple& a_tuple,T& a_fillable,EVALUATOR& a_x,EVALUATOR& a_filter) {
+template <class NTUPLE,class EVALUATOR,class T>
+inline bool project(std::ostream& a_out,NTUPLE& a_tuple,T& a_fillable,EVALUATOR& a_x,EVALUATOR& a_filter) {
   if(!a_x.is_valid()) {
     a_out << "project : evaluator initialization failed for tuple " << inlib::sout(a_tuple.title()) << "." << std::endl;
     return false;
@@ -52,9 +52,8 @@ inline bool project(std::ostream& a_out,inlib::aida::ntuple& a_tuple,T& a_fillab
   return true;
 }
 
-template <class EVALUATOR,class T>
-inline bool project(std::ostream& a_out,inlib::aida::ntuple& a_tuple,T& a_fillable,
-                    EVALUATOR& a_x,EVALUATOR& a_y,EVALUATOR& a_filter) {
+template <class NTUPLE,class EVALUATOR,class T>
+inline bool project(std::ostream& a_out,NTUPLE& a_tuple,T& a_fillable,EVALUATOR& a_x,EVALUATOR& a_y,EVALUATOR& a_filter) {
   if(!a_x.is_valid()) {
     a_out << "project : evaluator initialization failed for tuple " << inlib::sout(a_tuple.title()) << "." << std::endl;
     return false;
@@ -83,7 +82,46 @@ inline bool project(std::ostream& a_out,inlib::aida::ntuple& a_tuple,T& a_fillab
   return true;
 }
 
-typedef exlib::evaluator<inlib::aida::ntuple ,inlib::aida::aida_col<double> > eval_t;
+inline bool write_ibit(std::ostream& a_out,FILE* a_file,long& a_end,bool a_ok,int a_ibit) {
+  if(::ftell(a_file)==a_end) {
+    unsigned int i = 0;
+    char* buff = (char*)&i;
+    if(a_ok) i = (1 << (a_ibit-1));
+    int nitem = ::fwrite(buff,4,1,a_file);
+    if(nitem!=1) {
+      a_out << "panntu::write_ibit : IO problem 1 : " << nitem << std::endl;
+      return false;
+    }
+    a_end = ::ftell(a_file);
+  } else {
+    unsigned int i = 0;
+    char* buff = (char*)&i;
+    int nitem = ::fread(buff,4,1,a_file);
+    if(nitem!=1) {
+      a_out << "panntu::write_ibit : IO problem 2 : " << nitem << std::endl;
+      return false;
+    }
+    unsigned int j = (1 << (a_ibit-1));
+    if(a_ok) i |= j;
+    else   i &= ~j;
+    if(::fseek(a_file,-4L, SEEK_CUR)){
+      a_out << "panntu::write_ibit : IO problem 3." << std::endl;
+      return false;
+    }
+    nitem = ::fwrite(buff,4,1,a_file);
+    if(nitem!=1) {
+      a_out << "panntu::write_ibit : IO problem 4." << std::endl;
+      return false;
+    }
+    ::fflush(a_file); //WIN32 : seems needed.
+  }
+  return true;
+}
+
+typedef exlib::evaluator<inlib::aida::ntuple ,inlib::aida::aida_col<double> > aeval_t;
+
+#include <inlib/rntuple>
+typedef exlib::evaluator<inlib::read::intuple ,inlib::read::icolumn<double> > ieval_t;
 
 #include <exlib/KUIP/tools>
 #include "find_object"
@@ -123,12 +161,13 @@ void panntu_(void* a_tag) {
     std::vector<std::string> vars;
     if(!_sess.parse_tuple_name(IDN,PATH,vars)) return;
 
-    inlib::aida::ntuple* tuple = tuple_find(_sess,PATH);
-    if(!tuple) {
+    inlib::read::intuple* _intuple = intuple_find(_sess,PATH);
+    inlib::aida::ntuple* aida_ntuple = aida_ntuple_find(_sess,PATH);
+    if(!_intuple && !aida_ntuple) {
       out << "panntu : " << cmd_path << " : can't find tuple " << inlib::sout(PATH) << "." << std::endl;
       return;
     }
-
+    
     std::string sfilter;
     if(!_sess.filter_cuts(UWFUNC,sfilter)) {
       out << "panntu : problem treating " << inlib::sout(UWFUNC) << std::endl;
@@ -144,10 +183,16 @@ void panntu_(void* a_tag) {
         return;
       }
 
-      eval_t evalX(out,*tuple,vars[0],false); //false=case insensitive
-      eval_t filter(out,*tuple,sfilter,false);
-      if(!project(out,*tuple,*histogram,evalX,filter)){}
-
+      if(_intuple) {
+        ieval_t filter(out,*_intuple,sfilter,false); //WARNING : does not handle mix column types !
+        ieval_t evalX(out,*_intuple,vars[0],false); //false=case insensitive
+        if(!project(out,*_intuple,*histogram,evalX,filter)){}
+      } else if(aida_ntuple) {
+        aeval_t filter(out,*aida_ntuple,sfilter,false);
+        aeval_t evalX(out,*aida_ntuple,vars[0],false); //false=case insensitive
+        if(!project(out,*aida_ntuple,*histogram,evalX,filter)){}
+      }
+      
     } else if(vars.size()==2) {
 
       inlib::histo::h2d* histogram = h2d_find(_sess,IDH);
@@ -156,11 +201,19 @@ void panntu_(void* a_tag) {
         return;
       }
 
-      eval_t evalX(out,*tuple,vars[1],false); //false=case insensitive
-      eval_t evalY(out,*tuple,vars[0],false);
-      eval_t filter(out,*tuple,sfilter,false);
-
-      if(!project(out,*tuple,*histogram,evalX,evalY,filter)) {}
+      if(_intuple) {
+        ieval_t filter(out,*_intuple,sfilter,false); //WARNING : does not handle mix column types !
+        ieval_t evalX(out,*_intuple,vars[1],false);
+        ieval_t evalY(out,*_intuple,vars[0],false);
+        if(!project(out,*_intuple,*histogram,evalX,evalY,filter)) {}
+	
+      } else if(aida_ntuple) {
+        aeval_t filter(out,*aida_ntuple,sfilter,false);
+        aeval_t evalX(out,*aida_ntuple,vars[1],false); //false=case insensitive
+        aeval_t evalY(out,*aida_ntuple,vars[0],false);
+        if(!project(out,*aida_ntuple,*histogram,evalX,evalY,filter)) {}
+      }
+      
     }
 
   } else if(cmd_path=="/NTUPLE/PLOT") {
@@ -199,12 +252,13 @@ void panntu_(void* a_tag) {
     std::vector<std::string> vars;
     if(!_sess.parse_tuple_name(IDN,PATH,vars)) return;
 
-    inlib::aida::ntuple* tuple = tuple_find(_sess,PATH);
-    if(!tuple) {
+    inlib::read::intuple* _intuple = intuple_find(_sess,PATH);
+    inlib::aida::ntuple* aida_ntuple = aida_ntuple_find(_sess,PATH);
+    if(!_intuple && !aida_ntuple) {
       out << "panntu : " << cmd_path << " : can't find tuple " << inlib::sout(PATH) << "." << std::endl;
       return;
     }
-
+    
     std::string sfilter;
     if(!_sess.filter_cuts(UWFUNC,sfilter)) {
       out << "panntu : problem treating " << inlib::sout(UWFUNC) << std::endl;
@@ -213,9 +267,6 @@ void panntu_(void* a_tag) {
     if(sfilter=="1.") sfilter = "";
 
     if(vars.size()==1) {
-
-      eval_t evalX(out,*tuple,vars[0],false); //false=case insensitive
-      eval_t filter(out,*tuple,sfilter,false);
 
       std::string ID = inlib::tos(IDH);
       if(IDH==1000000) _sess.remove_handle(ID);
@@ -253,13 +304,29 @@ void panntu_(void* a_tag) {
 
         rep->reset();
 
-        if(!project(out,*tuple,*rep,evalX,filter)){}
-
+        if(_intuple) {
+          ieval_t filter(out,*_intuple,sfilter,false);
+          ieval_t evalX(out,*_intuple,vars[0],false); //false=case insensitive
+          if(!project(out,*_intuple,*rep,evalX,filter)){}
+        } else if(aida_ntuple) {
+          aeval_t filter(out,*aida_ntuple,sfilter,false);
+          aeval_t evalX(out,*aida_ntuple,vars[0],false); //false=case insensitive
+          if(!project(out,*aida_ntuple,*rep,evalX,filter)){}
+        }
+      
       } else {
 
         inlib::histo::c1d cloud;
-        if(!project(out,*tuple,cloud,evalX,filter)) return;
-
+        if(_intuple) {
+          ieval_t filter(out,*_intuple,sfilter,false);
+          ieval_t evalX(out,*_intuple,vars[0],false); //false=case insensitive
+          if(!project(out,*_intuple,cloud,evalX,filter)){}
+        } else if(aida_ntuple) {
+          aeval_t filter(out,*aida_ntuple,sfilter,false);
+          aeval_t evalX(out,*aida_ntuple,vars[0],false); //false=case insensitive
+          if(!project(out,*aida_ntuple,cloud,evalX,filter)) return;
+        }
+	
         double xmin = cloud.lower_edge();
         double xmax = cloud.upper_edge();
         if(xmax<xmin) {
@@ -338,10 +405,6 @@ void panntu_(void* a_tag) {
 
     } else if(vars.size()==2) {
 
-      eval_t evalX(out,*tuple,vars[1],false); //false=case insensitive
-      eval_t evalY(out,*tuple,vars[0],false);
-      eval_t filter(out,*tuple,sfilter,false);
-
       std::string ID = inlib::tos(IDH);
       if(IDH==1000000) _sess.remove_handle(ID);
 
@@ -378,12 +441,32 @@ void panntu_(void* a_tag) {
 
         rep->reset();
 
-	if(!project(out,*tuple,*rep,evalX,evalY,filter)) {}
-
+        if(_intuple) {
+          ieval_t filter(out,*_intuple,sfilter,false); //WARNING : does not handle mix column types !
+          ieval_t evalX(out,*_intuple,vars[1],false);
+          ieval_t evalY(out,*_intuple,vars[0],false);
+          if(!project(out,*_intuple,*rep,evalX,evalY,filter)) {}
+        } else if(aida_ntuple) {
+          aeval_t filter(out,*aida_ntuple,sfilter,false);
+          aeval_t evalX(out,*aida_ntuple,vars[1],false); //false=case insensitive
+          aeval_t evalY(out,*aida_ntuple,vars[0],false);
+	  if(!project(out,*aida_ntuple,*rep,evalX,evalY,filter)) {}
+        }
+      
       } else {
 
         inlib::histo::c2d cloud;
-	if(!project(out,*tuple,cloud,evalX,evalY,filter)) return;
+        if(_intuple) {
+          ieval_t filter(out,*_intuple,sfilter,false); //WARNING : does not handle mix column types !
+          ieval_t evalX(out,*_intuple,vars[1],false);
+          ieval_t evalY(out,*_intuple,vars[0],false);
+          if(!project(out,*_intuple,cloud,evalX,evalY,filter)) return;
+        } else if(aida_ntuple) {
+          aeval_t filter(out,*aida_ntuple,sfilter,false);
+          aeval_t evalX(out,*aida_ntuple,vars[1],false); //false=case insensitive
+          aeval_t evalY(out,*aida_ntuple,vars[0],false);
+          if(!project(out,*aida_ntuple,cloud,evalX,evalY,filter)) return;
+        }	  
 
         double xmin = cloud.lower_edge_x();
         double xmax = cloud.upper_edge_x();
@@ -489,29 +572,15 @@ void panntu_(void* a_tag) {
     exlib::KUIP::get_opts("OPTION",OPTS);
     std::string CHOPT = OPTION;
 
-    inlib::aida::ntuple* tuple = tuple_find(_sess,IDN);
-    if(!tuple) {
+    inlib::read::intuple* _intuple = intuple_find(_sess,IDN);
+    inlib::aida::ntuple* aida_ntuple = aida_ntuple_find(_sess,IDN);
+    if(!_intuple && !aida_ntuple) {
       out << "panntu : " << cmd_path << " : can't find tuple " << inlib::sout(IDN) << "." << std::endl;
       return;
     }
-
+    
     std::vector<std::string> vars;
     inlib::words(VARLIST,",",false,vars);
-
-    size_t varn = vars.size();
-    std::vector<inlib::aida::aida_base_col*> varcs(varn);
-    std::vector<std::string> varns(varn);
-    size_t vari;
-   {for(vari=0;vari<varn;vari++) {
-      inlib::aida::aida_base_col* col = tuple->find_aida_base_column(vars[vari],false); //false = case insensitive.
-      if(!col) {
-        out << "panntu : " << cmd_path << " : "
-            << " variable " << inlib::sout(vars[vari]) << " not a column of tuple " << inlib::sout(IDN) << std::endl;
-        return;
-      }
-      varcs[vari] = col;
-      varns[vari] = vars[vari];
-    }}
 
     std::string sfilter;
     if(!_sess.filter_cuts(UWFUNC,sfilter)) {
@@ -520,48 +589,128 @@ void panntu_(void* a_tag) {
     }
     if(sfilter=="1.") sfilter = "";
 
-    eval_t filter(out,*tuple,sfilter,false); //false=case_insensitive
-    if(!filter.is_valid()) {
-      out << "panntu : " << cmd_path << " : filter initialization failed." << std::endl;
-      return;
-    }
-
-    out << "+-------+";
-    for(vari=0;vari<varn;vari++) out << "--------------+";
-    out << std::endl;
-
-    out << "| Event |";
-    for(vari=0;vari<varn;vari++) out << gopaw::sjust(varns[vari],14,inlib::side_middle) << "|";
-    out << std::endl;
+    size_t varn = vars.size();
+    std::vector<std::string> varns(varn);
  
-    out << "+-------+";
-    for(vari=0;vari<varn;vari++) out << "--------------+";
-    out << std::endl;
-
-    int eventn = 0; 
+    int eventn = 0;
+    double dval;
+    std::string sval;
     int rowi = 1; 
     bool ok;
-    std::string sval;
-    tuple->start();
-    while(tuple->next()) {
-      if(rowi>=IFIRST) {
-        if((NEVENT!=99999999)&&(rowi>NEVENT)) break;       
-        if(!filter.accept(ok)) {
-          out << "panntu : " << cmd_path << " : filter.accept() failed." << std::endl;
+    size_t vari;
+    
+    if(_intuple) {
+      std::vector< inlib::read::icolumn<double>* > varcs(varn);
+      for(vari=0;vari<varn;vari++) {
+        inlib::read::icol* col = _intuple->find_icol_case_insensitive(vars[vari]);
+        if(!col) {
+          out << "panntu : " << cmd_path << " : "
+              << " variable " << inlib::sout(vars[vari]) << " not a column of tuple " << inlib::sout(IDN) << std::endl;
           return;
-	}
-        if(ok) {
-          out << "|" << gopaw::sjust(rowi,7,inlib::side_middle) << "|";
-          for(vari=0;vari<varn;vari++) {
-            if(!varcs[vari]->s_value(sval)) {}
-            out << gopaw::sjust(sval,14,inlib::side_middle);
-            out << "|";
-          }
-          out << std::endl;
-          eventn++;
         }
+        inlib::read::icolumn<double>* _col = inlib::id_cast<inlib::read::icol, inlib::read::icolumn<double> >(*col);
+        if(!_col) {
+          out << "panntu : " << cmd_path << " : "
+              << " variable " << inlib::sout(vars[vari]) << " not a column<double> of tuple " << inlib::sout(IDN) << std::endl;
+          return;
+        }
+        varcs[vari] = _col;
+        varns[vari] = vars[vari];
       }
-      rowi++;
+      
+      out << "+-------+";for(vari=0;vari<varn;vari++) out << "--------------+";out << std::endl;
+      out << "| Event |";
+      for(vari=0;vari<varn;vari++) out << gopaw::sjust(varns[vari],14,inlib::side_middle) << "|";
+      out << std::endl;
+      out << "+-------+";for(vari=0;vari<varn;vari++) out << "--------------+";out << std::endl;
+
+      ieval_t filter(out,*_intuple,sfilter,false); //false=case_insensitive
+      if(!filter.is_valid()) {
+        out << "panntu : " << cmd_path << " : filter initialization failed." << std::endl;
+        return;
+      }
+      _intuple->start();
+      while(_intuple->next()) {
+        if(rowi>=IFIRST) {
+          if((NEVENT!=99999999)&&(rowi>NEVENT)) break;       
+          if(!filter.accept(ok)) {
+            out << "panntu : " << cmd_path << " : filter.accept() failed." << std::endl;
+            return;
+  	  }  
+          if(ok) {
+            out << "|" << gopaw::sjust(rowi,7,inlib::side_middle) << "|";
+            for(vari=0;vari<varn;vari++) {
+              double dval;
+              if(!varcs[vari]->get_entry(dval)) {
+                out << "panntu : " << cmd_path << " : column->get_entry() failed." << std::endl;
+                return;
+  	      }  
+              sval = inlib::tos(dval);
+              out << gopaw::sjust(sval,14,inlib::side_middle);
+              out << "|";
+            }
+            out << std::endl;
+            eventn++;
+          }
+        }
+        rowi++;
+      }
+    } else if(aida_ntuple) {
+      std::vector< inlib::aida::aida_col<double>* > varcs(varn);
+      for(vari=0;vari<varn;vari++) {
+        inlib::aida::aida_base_col* col = aida_ntuple->find_aida_base_column(vars[vari],false); //false = case insensitive.
+        if(!col) {
+          out << "panntu : " << cmd_path << " : "
+              << " variable " << inlib::sout(vars[vari]) << " not a column of tuple " << inlib::sout(IDN) << std::endl;
+          return;
+        }
+        inlib::aida::aida_col<double>* _col = inlib::safe_cast<inlib::aida::base_col, inlib::aida::aida_col<double> >(*col);
+        if(!_col) {
+          out << "panntu : " << cmd_path << " : "
+              << " variable " << inlib::sout(vars[vari]) << " not a column<double> of tuple " << inlib::sout(IDN) << std::endl;
+          return;
+        }
+        varcs[vari] = _col;
+        varns[vari] = vars[vari];
+      }
+      
+      out << "+-------+";for(vari=0;vari<varn;vari++) out << "--------------+";out << std::endl;
+      out << "| Event |";
+      for(vari=0;vari<varn;vari++) out << gopaw::sjust(varns[vari],14,inlib::side_middle) << "|";
+      out << std::endl;
+      out << "+-------+";for(vari=0;vari<varn;vari++) out << "--------------+";out << std::endl;
+      
+      aeval_t filter(out,*aida_ntuple,sfilter,false); //false=case_insensitive
+      if(!filter.is_valid()) {
+        out << "panntu : " << cmd_path << " : filter initialization failed." << std::endl;
+        return;
+      }
+      aida_ntuple->start();
+      while(aida_ntuple->next()) {
+        if(rowi>=IFIRST) {
+          if((NEVENT!=99999999)&&(rowi>NEVENT)) break;       
+          if(!filter.accept(ok)) {
+            out << "panntu : " << cmd_path << " : filter.accept() failed." << std::endl;
+            return;
+  	  }  
+          if(ok) {
+            out << "|" << gopaw::sjust(rowi,7,inlib::side_middle) << "|";
+            for(vari=0;vari<varn;vari++) {
+              double dval;
+              if(!varcs[vari]->get_entry(dval)) {
+                out << "panntu : " << cmd_path << " : column->get_entry() failed." << std::endl;
+                return;
+  	      }  
+              sval = inlib::tos(dval);
+              out << gopaw::sjust(sval,14,inlib::side_middle);
+              out << "|";
+            }
+            out << std::endl;
+            eventn++;
+          }
+        }
+        rowi++;
+      }
     }
 
     out << "+-------+";
@@ -633,13 +782,6 @@ void panntu_(void* a_tag) {
       file = _lun->m_FILE;
     }
 
-    inlib::aida::ntuple* tuple = tuple_find(_sess,IDN);
-    if(!tuple) {
-      out << "panntu : " << cmd_path << " : can't find tuple " << inlib::sout(IDN) << "."
-          << std::endl;
-      return;
-    }
-
     std::string sfilter;
     if(!_sess.filter_cuts(UWFUNC,sfilter)) {
       out << "panntu : problem treating " << inlib::sout(UWFUNC) << std::endl;
@@ -647,12 +789,13 @@ void panntu_(void* a_tag) {
     }
     if(sfilter=="1.") sfilter = "";
 
-    eval_t filter(out,*tuple,sfilter,false); //false=case_insensitive
-    if(!filter.is_valid()) {
-      out << "panntu : filter initialization failed." << std::endl;
+    inlib::read::intuple* _intuple = intuple_find(_sess,IDN);
+    inlib::aida::ntuple* aida_ntuple = aida_ntuple_find(_sess,IDN);
+    if(!_intuple && !aida_ntuple) {
+      out << "panntu : " << cmd_path << " : can't find tuple " << inlib::sout(IDN) << "." << std::endl;
       return;
     }
-
+    
     int eventn = 0; 
     long end = 0L;
     if(file) {
@@ -661,56 +804,51 @@ void panntu_(void* a_tag) {
       ::rewind(file);
     }
 
-    bool ok;
-    int rowi = 1; 
-    tuple->start();
-    while(tuple->next()) {
-      if(rowi>=IFIRST) {
-        if((NEVENT!=99999999)&&(rowi>NEVENT)) break;
-        if(!filter.accept(ok)) {
-          out << "panntu : filter.accept() failed." << std::endl;
-          return;
-        }
-        if(ok) eventn++;
-        if(file) {    
-          if(::ftell(file)==end) {
-            unsigned int i = 0;
-            char* buff = (char*)&i;
-            if(ok) i = (1 << (ibit-1));
-            int nitem = ::fwrite(buff,4,1,file);
-            if(nitem!=1) {
-              out << "panntu : IO problem 1 : " << nitem << std::endl;
-              return;
-            }
-            end = ::ftell(file);
-          } else {
-            unsigned int i = 0;
-            char* buff = (char*)&i;
-            int nitem = ::fread(buff,4,1,file);
-            if(nitem!=1) {
-              out << "panntu : IO problem 2 : " << nitem << std::endl;
-              return;
-            }
-            unsigned int j = (1 << (ibit-1));
-            if(ok) i |= j;
-            else   i &= ~j;
-            if(::fseek(file,-4L, SEEK_CUR)){
-              out << "panntu : IO problem 3." << std::endl;
-              return;
-            }
-            nitem = ::fwrite(buff,4,1,file);
-            if(nitem!=1) {
-              out << "panntu : IO problem 4." << std::endl;
-              return;
-            }
-	    ::fflush(file); //WIN32 : seems needed.
-          }
-        }
+    if(_intuple) {
+      ieval_t filter(out,*_intuple,sfilter,false); //false=case_insensitive
+      if(!filter.is_valid()) {
+        out << "panntu : filter initialization failed." << std::endl;
+        return;
       }
-      rowi++;
+      bool ok;
+      int rowi = 1;
+      _intuple->start();
+      while(_intuple->next()) {
+        if(rowi>=IFIRST) {
+          if((NEVENT!=99999999)&&(rowi>NEVENT)) break;
+          if(!filter.accept(ok)) {
+            out << "panntu : filter.accept() failed." << std::endl;
+            return;
+          }
+          if(ok) eventn++;
+          if(file) {if(!write_ibit(out,file,end,ok,ibit)) return;}
+        }
+        rowi++;
+      }
+    } else if(aida_ntuple) {
+      aeval_t filter(out,*aida_ntuple,sfilter,false); //false=case_insensitive
+      if(!filter.is_valid()) {
+        out << "panntu : filter initialization failed." << std::endl;
+        return;
+      }
+      bool ok;
+      int rowi = 1;
+      aida_ntuple->start();
+      while(aida_ntuple->next()) {
+        if(rowi>=IFIRST) {
+          if((NEVENT!=99999999)&&(rowi>NEVENT)) break;
+          if(!filter.accept(ok)) {
+            out << "panntu : filter.accept() failed." << std::endl;
+            return;
+          }
+          if(ok) eventn++;
+          if(file) {if(!write_ibit(out,file,end,ok,ibit)) return;}
+        }
+        rowi++;
+      }
     }
-
-    if(mask!="") {
+    
+    if(mask.size()) {
       out << " bit " << ibit << ": "
           << gopaw::sjust(eventn,9,inlib::side_right)
           << " " << UWFUNC
@@ -722,3 +860,4 @@ void panntu_(void* a_tag) {
   }
 
 }
+

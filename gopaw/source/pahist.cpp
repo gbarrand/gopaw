@@ -452,7 +452,7 @@ void pahist_(void* a_tag) {
         if(_sess.verbose_level()) {
           out << "pahist : " << cmd_path << " file " << inlib::sout(sfile) << " is an hippodraw file." << std::endl;
           out << "pahist :  ntuple title " << inlib::sout(aida_tuple->title()) << "." << std::endl;
-          out << "pahist :  #columns " << aida_tuple->columns() << std::endl;
+          out << "pahist :  #columns " << aida_tuple->number_of_columns() << std::endl;
         }
         return;
       }

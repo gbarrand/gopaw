@@ -28,12 +28,15 @@ inline std::string sjust(const std::string& a_string,unsigned int a_size,inlib::
   return s;
 }
 
-inline void hprint(inlib::aida::ntuple& a_tuple,const std::string& a_name,std::ostream& a_out){
+template <class NTUPLE>
+inline void hprint(NTUPLE& a_tuple,const std::string& a_name,std::ostream& a_out){
 //int field = 13; //HBOOK had 17.
 
   a_out << " ********************************************************" << std::endl;
 
-  a_out << " * NTUPLE NAME= " << a_name << " ENTRIES= " << a_tuple.rows() << " TITLE= " << a_tuple.title() << std::endl;
+  inlib::uint64 rows;
+  if(!a_tuple.number_of_entries(rows)) {}
+  a_out << " * NTUPLE NAME= " << a_name << " ENTRIES= " << rows << " TITLE= " << a_tuple.title() << std::endl;
 
   a_out << " ********************************************************" << std::endl;
   a_out << " *  Var numb  *   Name    *    Lower     *    Upper     *" << std::endl;
@@ -43,10 +46,10 @@ inline void hprint(inlib::aida::ntuple& a_tuple,const std::string& a_name,std::o
   a_tuple.column_names(names);
   double mn,mx;
     
-  int coln = a_tuple.columns();
+  int coln = a_tuple.number_of_columns();
   for(int coli=0;coli<coln;coli++) {
-    inlib::aida::column_min<double>(a_tuple,coli,mn);
-    inlib::aida::column_max<double>(a_tuple,coli,mx);
+    a_tuple.template column_min<double>(coli,mn);
+    a_tuple.template column_max<double>(coli,mx);
 
     a_out << " *" 
           << sjust(inlib::tos(coli+1),12,inlib::side_middle) 
@@ -115,16 +118,16 @@ void pnutil_(void* a_tag) {
     //  out << " *** WARNING : already existing tuple replaced : ID=" << IDN << std::endl;
     //}
 
-    inlib::aida::ntuple* tuple = new inlib::aida::ntuple(out,TITLE);
-    if(!tuple) {
-      out << "pnutil : can't create tuple " << inlib::sout(IDN) << std::endl;
+    inlib::aida::ntuple* aida_ntuple = new inlib::aida::ntuple(out,TITLE);
+    if(!aida_ntuple) {
+      out << "pnutil : can't create inlib::aida::tuple " << inlib::sout(IDN) << std::endl;
       return;
     }
-    _sess.add_handle(IDN,tuple);
+    _sess.add_handle(IDN,aida_ntuple);
 
     std::vector<std::string> cols;
     inlib::words(VARLIST,",",false,cols);
-    inlib_vforcit(std::string,cols,it) tuple->create_col<double>(*it);
+    inlib_vforcit(std::string,cols,it) aida_ntuple->create_col<double>(*it);
 
   } else if(cmd_path=="/NTUPLE/READ") {
 
@@ -145,11 +148,19 @@ void pnutil_(void* a_tag) {
           << std::endl;
     }
 
-    inlib::aida::ntuple* tuple = tuple_find(_sess,IDN);
-    if(!tuple) {
-      out << "pnutil : can't find tuple " << inlib::sout(IDN) << "." << std::endl;
+    inlib::aida::ntuple* aida_ntuple = aida_ntuple_find(_sess,IDN);
+    if(!aida_ntuple) {
+      out << "pnutil : can't find inlib::aida::ntuple " << inlib::sout(IDN) << "." << std::endl;
       return;
     }
+    const std::vector<inlib::aida::base_col*>& cols = aida_ntuple->columns();
+   {inlib_vforcit(inlib::aida::base_col*,cols,it) {
+      inlib::aida::aida_col<double>* _col = inlib::safe_cast<inlib::aida::base_col, inlib::aida::aida_col<double> >(*(*it));
+      if(!_col) {
+        out << "pnutil : column of inlib::aida::ntuple not of type double." << std::endl;
+        return;
+      }
+    }}
 
     std::string sfile;
     inlib::file_name(FNAME,sfile); //to expand environment variables.
@@ -167,9 +178,7 @@ void pnutil_(void* a_tag) {
       return;
     }
 
-    const std::vector<inlib::aida::base_col*>& cols = tuple->cols();
-
-    std::vector<double> row(tuple->columns());
+    std::vector<double> row(aida_ntuple->number_of_columns());
     const unsigned int BUFSIZE = 65536;
     char buffer[BUFSIZE+1];
     inlib::atime begin = inlib::atime::now();
@@ -180,19 +189,19 @@ void pnutil_(void* a_tag) {
 
       size_t index = 0;
       inlib_vforcit(inlib::aida::base_col*,cols,it) {
-	inlib::aida::aida_col<double>* _col = (inlib::aida::aida_col<double>*)(*it);
+	inlib::aida::aida_col<double>* _col = inlib::safe_cast<inlib::aida::base_col, inlib::aida::aida_col<double> >(*(*it));
         _col->fill(row[index]);index++;
       }
 
-      if(!tuple->add_row()) {
-        out << "pnutil : problem filling tuple from file " << inlib::sout(FNAME) << "." << std::endl;
+      if(!aida_ntuple->add_row()) {
+        out << "pnutil : problem filling inlib::aida::ntuple from file " << inlib::sout(FNAME) << "." << std::endl;
         break;
       }
     }
     inlib::atime end = inlib::atime::elapsed(begin);
     ::fclose(file);
 
-    out << " ==>   " << tuple->rows() << " events have been read" 
+    out << " ==>   " << aida_ntuple->rows() << " events have been read" 
         << " in " << end.seconds() << " s (elapsed)."
         << std::endl;
 
@@ -200,13 +209,18 @@ void pnutil_(void* a_tag) {
 
     std::string IDN = ku_gets();
  
-    inlib::aida::ntuple* tuple = tuple_find(_sess,IDN);
-    if(!tuple) {
+    inlib::read::intuple* _intuple = intuple_find(_sess,IDN);
+    inlib::aida::ntuple* aida_ntuple = aida_ntuple_find(_sess,IDN);
+    if(!_intuple && !aida_ntuple) {
       out << "pnutil : object " << inlib::sout(IDN) << " not found." << std::endl;
       return;
     }
 
-    gopaw::hprint(*tuple,IDN,out);
+    if(_intuple) {
+      gopaw::hprint(*_intuple,IDN,out);
+    } else if(aida_ntuple) {
+      gopaw::hprint(*aida_ntuple,IDN,out);
+    }
 
   } else {
     out << "pnutil : " << cmd_path << " : dummy." << std::endl;
