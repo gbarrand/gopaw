@@ -165,6 +165,9 @@ extern int Fitsio_Pthread_Status;
 #elif defined(__arm64__) /*G.Barrand : iOS.*/
 #define BYTESWAPPED TRUE
 
+#elif defined(__aarch64__) /*G.Barrand : Android 64 bits.*/
+#define BYTESWAPPED TRUE
+
 #elif defined(__arm__)
 
 /* This assumes all ARM are little endian.  In the future, it might be  */
