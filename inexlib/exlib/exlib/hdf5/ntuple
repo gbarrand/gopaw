@@ -139,12 +139,15 @@ public:
       m_basket = new T[m_basket_size];
       if(m_write) {
       } else { //read.
-        size_t n = inlib::mn<size_t>((size_t)m_branch.entries(),m_basket_size);
-        if(!m_branch.read_page<T>(n,m_basket)) {
-          m_store.out() << "exlib::hdf5::ntuple::column_ref:column_ref : read_page() failed." << std::endl;
-          m_basket_pos = 0;
-	  m_basket_end = 0;
-          return;
+        inlib::uint64 _entries = m_branch.entries();
+        size_t n = inlib::mn<size_t>((size_t)_entries,m_basket_size);
+        if(_entries) {
+          if(!m_branch.read_page<T>(n,m_basket)) {
+            m_store.out() << "exlib::hdf5::ntuple::column_ref:column_ref : read_page() failed." << std::endl;
+            m_basket_pos = 0;
+            m_basket_end = 0;
+            return;
+          }
         }
   	m_basket_pos = 0;
 	m_basket_end = n;
