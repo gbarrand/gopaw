@@ -57,6 +57,16 @@ if [ "${app_use_shlib}" != "" ] ; then
   use_archive=no
 fi
 
+app_ccflags="`grep ${auto_use_pack}_build_ccflags ${auto_use_file}`"
+if [ "${app_ccflags}" != "" ] ; then
+  app_ccflags=`echo ${app_ccflags} | sed -e "s:${auto_use_pack}_build_ccflags::g"`
+  for item in ${app_ccflags} ; do
+    if [ ${item} != "//" ] ; then
+      ccflags="${ccflags} ${item}"
+    fi
+  done
+fi
+
 app_cppflags="`grep ${auto_use_pack}_build_cppflags ${auto_use_file}`"
 if [ "${app_cppflags}" != "" ] ; then
   app_cppflags=`echo ${app_cppflags} | sed -e "s:${auto_use_pack}_build_cppflags::g"`
