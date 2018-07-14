@@ -12,6 +12,7 @@
 #include <inlib/vmanip>
 #include <inlib/rroot/cids>
 #include <inlib/sout>
+#include <inlib/num2s>
 
 #include "cfitsio"
 
@@ -23,10 +24,14 @@ namespace exlib {
 namespace rcfitsio {
 
 class ntuple : public virtual inlib::read::intuple {
-public: //inlib::read::intuple
-  virtual void start() {
-    m_row = -1;
+public:
+  static const std::string& s_class() {
+    static const std::string s_v("exlib::rcfitsio::ntuple");
+    return s_v;
   }
+  virtual const std::string& s_cls() const {return s_class();}
+public: //inlib::read::intuple
+  virtual void start() {m_row = -1;}
   virtual void stop() {
     inlib_vforit(inlib::read::icol*,m_cols,it) (*it)->stop();
   }
@@ -45,8 +50,14 @@ public: //inlib::read::intuple
     return m_cols;
   }
 
+  virtual const std::string& title() const {return m_title;}
+
+  virtual bool number_of_entries(inlib::uint64 & a_value) const {
+    a_value = (inlib::uint64)m_nrow;
+    return true;
+  }
 public:
-  template <class T>
+  template <class T,class ST>  //ST = storage type.
   class column : public virtual inlib::read::icolumn<T> {
   public: //icol
     virtual const std::string& name() const {return m_name;}
@@ -54,19 +65,23 @@ public:
   public: //icolumn<T>
     virtual bool get_entry(T& a_v) const {
       if(!m_vals) { //optimization : try to read at once the column.        
-        const_cast< column<T>& >(*this).m_vals = new T[m_rows];
+        const_cast< column<T,ST>& >(*this).m_vals = new ST[m_rows];
         if(m_vals) {
-          if(!m_ffile.TBL_read_col<T>(m_col,m_rows,1,m_vals)){
+          if(!m_ffile.TBL_read_col<ST>(m_col,m_rows,1,m_vals)){
             delete [] m_vals;
-            const_cast< column<T>& >(*this).m_vals = 0;
+            const_cast< column<T,ST>& >(*this).m_vals = 0;
+	    a_v = T();
             return false;
           }
         }
       }      
       if(!m_vals) { //continue with the not opt way.
-        return m_ffile.TBL_read_cell<T>(m_col,m_row,0,a_v); //0 irepeat
+        ST _tmp;
+        if(!m_ffile.TBL_read_cell<ST>(m_col,m_row,0,_tmp)) {a_v = T();} //0 irepeat
+        a_v = T(_tmp);
+        return true;
       } else {
-        a_v = m_vals[m_row]; //0 = irepeat.
+        a_v = T(m_vals[m_row]); //0 = irepeat.
         return true;
       }
     }
@@ -112,7 +127,7 @@ public:
     std::string m_name;
     cfitsio::T_type m_type;
     //opt:
-    T* m_vals;
+    ST* m_vals;
   };
 
 
@@ -253,11 +268,6 @@ public:
 
 
 public:
-  static const std::string& s_class() {
-    static const std::string s_v("exlib::rcfitsio::ntuple");
-    return s_v;
-  }
-public:
   ntuple(std::ostream& a_out,const std::string& a_file,unsigned int a_hdu)
   :m_file(a_file)
   ,m_hdu(a_hdu)
@@ -269,6 +279,7 @@ public:
 #ifdef EXLIB_MEM
     mem::increment(s_class().c_str());
 #endif
+    inlib::num2s(a_hdu,m_title);
   }
   virtual ~ntuple() {
     inlib::safe_clear<inlib::read::icol>(m_cols);
@@ -286,6 +297,7 @@ protected:
   ,m_ffile(a_from.m_ffile.out())
   ,m_nrow(0)
   ,m_row(-1)
+  ,m_title(a_from.m_title)
   {
 #ifdef EXLIB_MEM
     mem::increment(s_class().c_str());
@@ -293,7 +305,7 @@ protected:
   }
   ntuple& operator=(const ntuple&){return *this;}
 public:
-  bool initialize() {
+  bool initialize(bool a_enforce_double = false) {
     inlib::safe_clear<inlib::read::icol>(m_cols);
 
     std::ostream& out = m_ffile.out();
@@ -377,20 +389,22 @@ public:
         if(va_type) {
           icol = create_va_column<float>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<float>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<float>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<float>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,float>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<float,float>(nrow,col,names[col],type);
+	  }
         }
 
       } else if(type==TDOUBLE) {
         if(va_type) {
           icol = create_va_column<double>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol =
-            create_vec_column<double>(nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<double>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<double>(nrow,col,names[col],type);
+          icol = create_column<double,double>(nrow,col,names[col],type);
         }
 
       } else if((type==TINT)||(type==TLONG)) {
@@ -399,77 +413,103 @@ public:
         } else if(vec_type) {
           icol = create_vec_column<int>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<int>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,int>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<int,int>(nrow,col,names[col],type);
+	  }
         }
 
       } else if(type==TSHORT) {
         if(va_type) {
           icol = create_va_column<short>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<short>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<short>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<short>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,short>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<short,short>(nrow,col,names[col],type);
+	  }
         }
 
       } else if(type==TBYTE) {
         if(va_type) {
           icol = create_va_column<inlib::byte>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<inlib::byte>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<inlib::byte>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<inlib::byte>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,inlib::byte>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<inlib::byte,inlib::byte>(nrow,col,names[col],type);
+	  }
         }
 
       } else if(type==TLONGLONG) {
         if(va_type) {
           icol = create_va_column<inlib::int64>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<inlib::int64>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<inlib::int64>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<inlib::int64>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,inlib::int64>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<inlib::int64,inlib::int64>(nrow,col,names[col],type);
+	  }
         }
 
+/*
       } else if(type==TBIT) {
         if(va_type) {
           icol = create_va_column<inlib::fits_bit>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<inlib::fits_bit>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<inlib::fits_bit>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<inlib::fits_bit>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,inlib::fits_bit>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<inlib::fits_bit,inlib::fits_bit>(nrow,col,names[col],type);
+	  }
         }
-
+*/
       } else if((type==TUINT)||(type==TULONG)) {
         if(va_type) {
           icol = create_va_column<unsigned int>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<unsigned int>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<unsigned int>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<unsigned int>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,unsigned int>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<unsigned int,unsigned int>(nrow,col,names[col],type);
+	  }
         }
 
       } else if(type==TUSHORT) {
         if(va_type) {
           icol = create_va_column<unsigned short>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<unsigned short>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<unsigned short>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<unsigned short>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,unsigned short>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<unsigned short,unsigned short>(nrow,col,names[col],type);
+	  }
         }
 
       } else if(type==TSBYTE) {
         if(va_type) {
           icol = create_va_column<char>(nrow,col,names[col],type);
         } else if(vec_type) {
-          icol = create_vec_column<char>
-                   (nrow,col,names[col],type,repeats[col]);
+          icol = create_vec_column<char>(nrow,col,names[col],type,repeats[col]);
         } else {
-          icol = create_column<char>(nrow,col,names[col],type);
+	  if(a_enforce_double) {
+            icol = create_column<double,char>(nrow,col,names[col],type,a_enforce_double);
+	  } else {
+            icol = create_column<char,char>(nrow,col,names[col],type);
+	  }
         }
 
       } else {
@@ -502,26 +542,27 @@ public:
   }
 
 protected:
-  template <class T>
-  column<T>* create_column(int a_rows,
-                                  int a_col,
-                                  const std::string& a_name,
-                                  cfitsio::T_type a_type){
+  template <class T,class ST>
+  inlib::read::icol* create_column(int a_rows,int a_col,const std::string& a_name,cfitsio::T_type a_type,
+                                   bool a_enforce_double = false){
     if(inlib::find_named<inlib::read::icol>(m_cols,a_name)) return 0;
-    column<T>* col = new column<T>(m_ffile,a_rows,m_row,a_col,a_name,a_type);
-    if(!col) return 0;
-    m_cols.push_back(col);
-    return col;
+    if(a_enforce_double) {
+      column<double,ST>* col = new column<double,ST>(m_ffile,a_rows,m_row,a_col,a_name,a_type);
+      if(!col) return 0;
+      m_cols.push_back(col);
+      return col;
+    } else {
+      column<T,ST>* col = new column<T,ST>(m_ffile,a_rows,m_row,a_col,a_name,a_type);
+      if(!col) return 0;
+      m_cols.push_back(col);
+      return col;
+    }
   }
   template <class T>
-  vec_column<T>* create_vec_column(int a_rows,
-                               int a_col,
-                               const std::string& a_name,
-                               cfitsio::T_type a_type,
-                               int a_repeat) {
+  vec_column<T>* create_vec_column(int a_rows,int a_col,
+                                   const std::string& a_name,cfitsio::T_type a_type,int a_repeat) {
     if(inlib::find_named<inlib::read::icol>(m_cols,a_name)) return 0;
-    vec_column<T>* col = 
-      new vec_column<T>(m_ffile,a_rows,m_row,a_col,a_name,a_type,a_repeat);
+    vec_column<T>* col = new vec_column<T>(m_ffile,a_rows,m_row,a_col,a_name,a_type,a_repeat);
     if(!col) return 0;
     m_cols.push_back(col);
     return col;
@@ -532,8 +573,7 @@ protected:
                                  const std::string& a_name,
                                  cfitsio::T_type a_type){
     if(inlib::find_named<inlib::read::icol>(m_cols,a_name)) return 0;
-    va_column<T>* col = 
-      new va_column<T>(m_ffile,a_rows,m_row,a_col,a_name,a_type);
+    va_column<T>* col = new va_column<T>(m_ffile,a_rows,m_row,a_col,a_name,a_type);
     if(!col) return 0;
     m_cols.push_back(col);
     return col;
@@ -545,6 +585,7 @@ protected:
   int m_nrow;
   int m_row;
   std::vector<inlib::read::icol*> m_cols;
+  std::string m_title;
 };
 
 }}
