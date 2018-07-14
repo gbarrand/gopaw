@@ -306,6 +306,36 @@ inline bool read_profile(std::ostream& a_out,hid_t a_loc,const std::string& a_na
   return true;
 }
 
+inline bool read_class_version(std::ostream& a_out,hid_t a_loc,const std::string& a_name,
+                               std::string& a_class,int& a_version,bool a_verbose = true) {
+  hid_t id = exlib_H5Gopen(a_loc,a_name.c_str());
+  if(id<0) {
+    if(a_verbose) a_out << "exlib::hdf5::read_class_version : can't open group." << std::endl;
+    a_class.clear();
+    a_version = 0;
+    return false;
+  }
+
+  if(!read_atb(id,"class",a_class)) {
+    if(a_verbose) a_out << "exlib::hdf5::read_class_version : can't read_atb() class." << std::endl;
+    ::H5Gclose(id);
+    a_class.clear();
+    a_version = 0;
+    return false;
+  }
+
+  if(!read_atb(id,"version",a_version)) {
+    if(a_verbose) a_out << "exlib::hdf5::read_class_version : read_atb version failed." << std::endl;
+    ::H5Gclose(id);
+    a_class.clear();
+    a_version = 0;
+    return false;
+  }
+
+  ::H5Gclose(id);
+  return true;
+}
+
 }}
 
 //exlib_build_use inlib
