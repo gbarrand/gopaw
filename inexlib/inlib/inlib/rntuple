@@ -123,9 +123,9 @@ public:
     icol* _base_col = cols[a_col];
     icolumn<T>* _col = id_cast<icol, icolumn<T> >(*_base_col);
     if(!_col) return false;
-    start();
     uint64 _rows;
     if(!number_of_entries(_rows)) return false;
+    start();
     T v;
    {for(uint64 row=0;row<_rows;row++) {
       if(!next()) {a_value = T();return false;}
@@ -148,9 +148,9 @@ public:
     icol* _base_col = cols[a_col];
     icolumn<T>* _col = id_cast<icol, icolumn<T> >(*_base_col);
     if(!_col) return false;
-    start();
     uint64 _rows;
     if(!number_of_entries(_rows)) return false;
+    start();
     T v;
    {for(uint64 row=0;row<_rows;row++) {
       if(!next()) {a_value = T();return false;}

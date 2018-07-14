@@ -214,7 +214,7 @@ public:
   public: //icol
     virtual void* cast(cid a_class) const {
       if(void* p = cmp_cast<column_string>(this,a_class)) return p;
-      return 0;
+      return parent::cast(a_class);
     }
     virtual cid id_cls() const {return id_class();}
     virtual const std::string& name() const {return m_leaf.name();}
@@ -247,7 +247,7 @@ public:
   public: //icol
     virtual void* cast(cid a_class) const {
       if(void* p = cmp_cast<column_vector_string_ref>(this,a_class)) return p;
-      return 0;
+      return parent::cast(a_class);
     }
     virtual cid id_cls() const {return id_class();}
     virtual const std::string& name() const {return m_leaf.name();}
@@ -298,7 +298,7 @@ public:
   public: //icol
     virtual void* cast(cid a_class) const {
       if(void* p = cmp_cast<column_vector_string>(this,a_class)) return p;
-      return 0;
+      return parent::cast(a_class);
     }
     virtual cid id_cls() const {return id_class();}
     virtual const std::string& name() const {return m_leaf.name();}
