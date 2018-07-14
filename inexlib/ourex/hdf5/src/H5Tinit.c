@@ -9,14 +9,34 @@
   #include <TargetConditionals.h>
 
   #if TARGET_OS_IPHONE
-  #include "H5Tinit_Linux.ic"
-  #elif defined(__i386__)
-  #include "H5Tinit_macosx_intel.ic"
-  #elif defined(__x86_64__)
-  #include "H5Tinit_macosx_x86_64.ic"
+
+  #if defined(TARGET_RT_64_BIT) && (TARGET_RT_64_BIT == 1) 
+  #include "H5Tinit_Linux_x86_64.ic"
   #else
-  #include "H5Tinit_macosx.ic"
+  #include "H5Tinit_Linux.ic"
   #endif
+
+  #else /*macOS*/
+
+  #if defined(TARGET_RT_64_BIT) && (TARGET_RT_64_BIT == 1)
+
+  #if defined(TARGET_RT_BIG_ENDIAN)  && (TARGET_RT_BIG_ENDIAN == 1) 
+  #error "ourex/hdf5/src/H5Tinit.c : __APPLE__ platform not handled."
+  #else
+  #include "H5Tinit_macosx_x86_64.ic"
+  #endif
+
+  #else
+
+  #if defined(TARGET_RT_BIG_ENDIAN)  && (TARGET_RT_BIG_ENDIAN == 1) 
+  #include "H5Tinit_macosx.ic"
+  #else
+  #include "H5Tinit_macosx_intel.ic"
+  #endif
+
+  #endif
+
+  #endif /*TARGET_OS_IPHONE*/
 
 /*
 #elif defined(__CYGWIN__)
@@ -28,6 +48,14 @@
   #endif
 */
 
+#elif defined(ANDROID) /*G.Barrand*/
+
+  #if defined(__aarch64__)
+  #include "H5Tinit_Linux_x86_64.ic"
+  #else
+  #include "H5Tinit_Linux.ic"
+  #endif
+
 #elif defined(__linux__)
 
   #if defined(__x86_64__)
@@ -35,10 +63,6 @@
   #else
   #include "H5Tinit_Linux.ic"
   #endif
-
-#elif defined(ANDROID) /*G.Barrand*/
-
-  #include "H5Tinit_Linux.ic"
 
 #else
 
