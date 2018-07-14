@@ -39,12 +39,25 @@ public:
 public:
   template <class T,class ST> //ST = storage type.
   class column_ref : public virtual inlib::read::icolumn<T> {
+    //typedef read::icolumn<T> parent;
 #ifdef INLIB_MEM
     static const std::string& s_class() {
       static const std::string s_v("exlib::hdf5::rntuple::column_ref<"+inlib::stype(T())+">");
       return s_v;
     }
 #endif
+/*
+  public:  //inlib::read::icol
+    static inlib::cid id_class() {
+      static const T s_v = T(); //do that for T = std::string.
+      return 200+inlib::_cid(s_v)+10000;
+    }
+    virtual void* cast(inlib::cid a_class) const {
+      if(void* p = inlib::cmp_cast<column_ref>(this,a_class)) {return p;}
+      return parent::cast(a_class);
+    }
+    virtual inlib::cid id_cls() const {return id_class();}
+    */
   public: //inlib::read::icol
     virtual const std::string& name() const {return m_name;}
     virtual void stop() {}
@@ -162,16 +175,17 @@ public:
       return s_v;
     }
 #endif
+/*
   public:
     static inlib::cid id_class() {
       static const T s_v = T(); //do that for T = std::string.
-      return inlib::_cid(s_v);
+      return 200+inlib::_cid(s_v);
     }
     virtual void* cast(inlib::cid a_class) const {
       if(void* p = inlib::cmp_cast<column>(this,a_class)) {return p;}
-      else return 0;
+      return parent::cast(a_class);
     }
-    virtual inlib::cid id_cls() const {return id_class();}
+    virtual inlib::cid id_cls() const {return id_class();}*/
   public:
     column(store& a_store,pages& a_pages,const std::string& a_name,size_t a_basket_size)
     :parent(a_store,a_pages,a_name,a_basket_size,m_tmp)  //m_tmp is a ST.
@@ -198,8 +212,6 @@ public:
       m_tmp = a_from.m_tmp;
       return *this;
     }
-  public:
-    bool get_entry(T& a_v) const {a_v = T(m_tmp);return true;} //read.
   protected:
     ST m_tmp;
   };
