@@ -4,10 +4,10 @@
 #ifndef gopaw_version
 #define gopaw_version
 
-#define GOPAW_MAJOR_VERSION 1
+#define GOPAW_MAJOR_VERSION 2
 #define GOPAW_MINOR_VERSION 0
 #define GOPAW_PATCH_VERSION 0
-#define GOPAW_VERSION       "1.0.0"
-#define GOPAW_VERSION_VRP   "v1r0p0"
+#define GOPAW_VERSION       "2.0.0"
+#define GOPAW_VERSION_VRP   "v2r0p0"
 
 #endif
