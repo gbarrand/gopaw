@@ -56,6 +56,8 @@ inline const std::string& leaf_bool_cls() {
 template <class T>
 class leaf : public base_leaf {
 public:
+  typedef T value_t;
+public:
   static const std::string& s_class() {
     static const std::string s_v("inlib::rroot::leaf<"+stype(T())+">");
     return s_v;
