@@ -59,7 +59,7 @@ public:
   virtual void win_render() {
     if(m_display==EGL_NO_DISPLAY) return;
 #ifdef EXLIB_TRACE
-    _alogi("app_Android::main::win_render : begin : 000");
+    _alogi("app_Android::main::win_render : begin");
 #endif
     //NOTE : bracketing here with ::eglMakeCurrent(surface,NO_SURFACE)
     //       does not work on my SGS1/2.3.3.
@@ -86,12 +86,9 @@ public:
   ////////////////////////////////////////
   ////////////////////////////////////////
 public:
-  main(const std::string& a_app_name,
-       std::ostream& a_out,
-       const std::string& a_data_dir,
-       const std::string& a_res_dir,
-       const std::string& a_out_dir,
-       const std::string& a_tmp_dir,
+  main(const std::string& a_app_name,std::ostream& a_out,
+       const std::string& a_data_dir,const std::string& a_res_dir,
+       const std::string& a_out_dir,const std::string& a_tmp_dir,
        bool a_verbose)
   :parent_pv_holder(a_out)
   ,parent(a_out,
@@ -103,10 +100,20 @@ public:
   ,m_context(EGL_NO_CONTEXT)
   ,m_surface(EGL_NO_SURFACE)
   {
+#ifdef EXLIB_TRACE
+    _alogi("app_Android::main::main : begin : %lu",(unsigned long)this);
+#endif
     parent::push_home(); //NOTE : it can't call a potential push_home() done on an inheriting class.
     //parent::push_home();
+#ifdef EXLIB_TRACE
+    _alogi("app_Android::main::main : end");
+#endif
   }
-  virtual ~main(){}
+  virtual ~main(){
+#ifdef EXLIB_TRACE
+    _alogi("app_Android::main::~main : %lu",(unsigned long)this);
+#endif
+  }
 private:
   main(const main& a_from)
   :inlib::sg::ui(a_from)
@@ -209,11 +216,15 @@ public:
     m_surface = surface;
 
 #ifdef EXLIB_TRACE
-    _alogi("app_Android::main::initialize_display : end : %d %d",w,h);
+    _alogi("app_Android::main::initialize_display : set_size : %d %d",w,h);
 #endif
 
     parent::set_size(w,h);
     win_render();
+
+#ifdef EXLIB_TRACE
+    _alogi("app_Android::main::initialize_display : end");
+#endif
 
     return true;
   }
@@ -276,11 +287,14 @@ public:
     if(!parent::m_ww) return;
     if(!parent::m_wh) return;
 #ifdef EXLIB_TRACE
-    _alogi("app_Android::main::back_render");
+    _alogi("app_Android::main::back_render : begin");
 #endif
     m_mgr_gra.begin_render(0,0,parent::m_ww,parent::m_wh,a_r,a_g,a_b,a_a);
     m_mgr_gra.end_render();
     ::eglSwapBuffers(m_display,m_surface);
+#ifdef EXLIB_TRACE
+    _alogi("app_Android::main::back_render : end");
+#endif
   }
 
   void rotate_device() {
@@ -290,7 +304,7 @@ public:
     if(parent::m_ww==parent::m_wh) return; //square device
 
 #ifdef EXLIB_TRACE
-    _alogi("app_Android::main::rotate_device : ...");
+    _alogi("app_Android::main::rotate_device : begin");
     if(m_app->window) {
       int32_t ww = ANativeWindow_getWidth(m_app->window);
       int32_t wh = ANativeWindow_getHeight(m_app->window);
@@ -303,6 +317,10 @@ public:
 
     // draw black screen waiting that the software had rotated properly.
     back_render(0,0,0,1);
+
+#ifdef EXLIB_TRACE
+    _alogi("app_Android::main::rotate_device : end");
+#endif
   }
 protected:
   ////////////////////////////////////////
@@ -461,20 +479,23 @@ protected:
   public:
     virtual inlib::sg::return_action action() {
 #ifdef EXLIB_TRACE
-      m_this._alogi("check_size_work::action : start (010)...");
+      m_this._alogi("check_size_work::action : begin");
 #endif
 
-      //NOTE : look "too much" to recreate the surface, but without that
+      //NOTE : it looks "too much" to recreate the surface, but without that
       //       we have weird effect (probably related to z buffer) if
       //       using VBOs+rotation in ioda on the Nexus-10/4.2.2
       //       and we never get the new size on JEC/SGS-3/4.1.2.
 
 #ifdef EXLIB_TRACE
-      int32_t ww = ANativeWindow_getWidth(m_this.m_app->window);
-      int32_t wh = ANativeWindow_getHeight(m_this.m_app->window);
+      //int32_t ww = ANativeWindow_getWidth(m_this.m_app->window);   //it crashes on my Galaxy Note 8 when rotating.
+      //int32_t wh = ANativeWindow_getHeight(m_this.m_app->window);
 #endif
 
       if(!m_this.recreate_surface()) {
+#ifdef EXLIB_TRACE
+        m_this._alogi("check_size_work::action : recreate_surface() failed.");
+#endif
         m_single_shoot = true;
         return inlib::sg::return_none;
       }
@@ -484,15 +505,19 @@ protected:
       ::eglQuerySurface(m_this.m_display,m_this.m_surface,EGL_HEIGHT,&h);
 
 #ifdef EXLIB_TRACE
-      m_this._alogi("check_size_work::action : %d %d %d %d",ww,wh,w,h);
+      //m_this._alogi("check_size_work::action : %d %d %d %d",ww,wh,w,h);
+      m_this._alogi("check_size_work::action : %d %d",w,h);
 #endif
 
       if( (w==EGLint(m_this.width())) && (h==EGLint(m_this.height())) ) {
-        m_counter++;
+      /*m_counter++;
         if(m_counter>100) {
+#ifdef EXLIB_TRACE
+           m_this._alogi("check_size_work::action : same size 100 times.");
+#endif
            m_single_shoot = true;
            return inlib::sg::return_to_render;
-        }
+        }*/
         return inlib::sg::return_none;
       }
 
@@ -504,7 +529,7 @@ protected:
       m_single_shoot = true; //IMPORTANT
 
 #ifdef EXLIB_TRACE
-      m_this._alogi("check_size_work::action : size changed : end.");
+      m_this._alogi("check_size_work::action : size changed : end");
 #endif
       return inlib::sg::return_to_render;
     }
@@ -547,32 +572,118 @@ static int32_t handle_input(struct android_app* a_app,AInputEvent* a_event) {
     float y = float(main->height())-AMotionEvent_getY(a_event,0);
     int32_t action = AMotionEvent_getAction(a_event);
     if(action==AMOTION_EVENT_ACTION_DOWN) {
-      if(main->touch_down(int(x),int(y))) {
-        main->win_render();
-      }
+      if(main->touch_down(int(x),int(y))) main->win_render();
     } else if(action==AMOTION_EVENT_ACTION_UP) {
       main->add_work_check_arm_buttons();
-      if(main->touch_up(int(x),int(y))) {
-        main->win_render();
-      }
+      if(main->touch_up(int(x),int(y))) main->win_render();
     } else if(action==AMOTION_EVENT_ACTION_MOVE) {
-      if(main->touch_move(int(x),int(y))) {
-        main->win_render();
-      }
+      if(main->touch_move(int(x),int(y))) main->win_render();
     }
     return 1;
   }
   return 0;
 }
 
+static bool APP_CMD_to_string(int32_t a_cmd,std::string& a_string) {
+  //from : android-ndk-r17/sources/android/native_app_glue/android_native_app_glue.h
+  if(a_cmd==APP_CMD_INPUT_CHANGED)        {a_string = "APP_CMD_INPUT_CHANGED";return true;}
+  if(a_cmd==APP_CMD_INIT_WINDOW)          {a_string = "APP_CMD_INIT_WINDOW";return true;}
+  if(a_cmd==APP_CMD_TERM_WINDOW)          {a_string = "APP_CMD_TERM_WINDOW";return true;}
+  if(a_cmd==APP_CMD_WINDOW_RESIZED)       {a_string = "APP_CMD_WINDOW_RESIZED";return true;}
+  if(a_cmd==APP_CMD_WINDOW_REDRAW_NEEDED) {a_string = "APP_CMD_WINDOW_REDRAW_NEEDED";return true;}
+  if(a_cmd==APP_CMD_CONTENT_RECT_CHANGED) {a_string = "APP_CMD_CONTENT_RECT_CHANGED";return true;}
+  if(a_cmd==APP_CMD_GAINED_FOCUS)         {a_string = "APP_CMD_GAINED_FOCUS";return true;}
+  if(a_cmd==APP_CMD_LOST_FOCUS)           {a_string = "APP_CMD_LOST_FOCUS";return true;}
+  if(a_cmd==APP_CMD_CONFIG_CHANGED)       {a_string = "APP_CMD_CONFIG_CHANGED";return true;}
+  if(a_cmd==APP_CMD_LOW_MEMORY)           {a_string = "APP_CMD_LOW_MEMORY";return true;}
+  if(a_cmd==APP_CMD_START)                {a_string = "APP_CMD_START";return true;}
+  if(a_cmd==APP_CMD_RESUME)               {a_string = "APP_CMD_RESUME";return true;}
+  if(a_cmd==APP_CMD_SAVE_STATE)           {a_string = "APP_CMD_SAVE_STATE";return true;}
+  if(a_cmd==APP_CMD_PAUSE)                {a_string = "APP_CMD_PAUSE";return true;}
+  if(a_cmd==APP_CMD_STOP)                 {a_string = "APP_CMD_STOP";return true;}
+  if(a_cmd==APP_CMD_DESTROY)              {a_string = "APP_CMD_DESTROY";return true;}
+  a_string = "unknown";
+  return false;
+}
+
+
+/*
+     * Command from main thread: the AInputQueue has changed.  Upon processing
+     * this command, android_app->inputQueue will be updated to the new queue
+     * (or NULL).
+    APP_CMD_INPUT_CHANGED,
+
+     * Command from main thread: a new ANativeWindow is ready for use.  Upon
+     * receiving this command, android_app->window will contain the new window
+     * surface.
+    APP_CMD_INIT_WINDOW,
+
+     * Command from main thread: the existing ANativeWindow needs to be
+     * terminated.  Upon receiving this command, android_app->window still
+     * contains the existing window; after calling android_app_exec_cmd
+     * it will be set to NULL.
+    APP_CMD_TERM_WINDOW,
+
+     * Command from main thread: the current ANativeWindow has been resized.
+     * Please redraw with its new size.
+    APP_CMD_WINDOW_RESIZED,
+
+     * Command from main thread: the system needs that the current ANativeWindow
+     * be redrawn.  You should redraw the window before handing this to
+     * android_app_exec_cmd() in order to avoid transient drawing glitches.
+    APP_CMD_WINDOW_REDRAW_NEEDED,
+
+     * Command from main thread: the content area of the window has changed,
+     * such as from the soft input window being shown or hidden.  You can
+     * find the new content rect in android_app::contentRect.
+    APP_CMD_CONTENT_RECT_CHANGED,
+
+     * Command from main thread: the app's activity window has gained
+     * input focus.
+    APP_CMD_GAINED_FOCUS,
+
+     * Command from main thread: the app's activity window has lost
+     * input focus.
+    APP_CMD_LOST_FOCUS,
+
+     * Command from main thread: the current device configuration has changed.
+    APP_CMD_CONFIG_CHANGED,
+
+     * Command from main thread: the system is running low on memory.
+     * Try to reduce your memory use.
+    APP_CMD_LOW_MEMORY,
+
+     * Command from main thread: the app's activity has been started.
+    APP_CMD_START,
+
+     * Command from main thread: the app's activity has been resumed.
+    APP_CMD_RESUME,
+
+     * Command from main thread: the app should generate a new saved state
+     * for itself, to restore from later if needed.  If you have saved state,
+     * allocate it with malloc and place it in android_app.savedState with
+     * the size in android_app.savedStateSize.  The will be freed for you
+     * later.
+    APP_CMD_SAVE_STATE,
+
+     * Command from main thread: the app's activity has been paused.
+    APP_CMD_PAUSE,
+
+     * Command from main thread: the app's activity has been stopped.
+    APP_CMD_STOP,
+
+     * Command from main thread: the app's activity is being destroyed,
+     * and waiting for the app thread to clean up and exit before proceeding.
+    APP_CMD_DESTROY,
+*/
+
 template <class APP_MAIN>
 static void handle_cmd(struct android_app* a_app,int32_t a_cmd) {
   app_Android::main<APP_MAIN>* main = (app_Android::main<APP_MAIN>*)a_app->userData;
 #ifdef EXLIB_TRACE
-  main->_alogi("app_Android::handle_cmd : %d",a_cmd);
-  main->_alogi(" APP_CMD_INIT_WINDOW : %d",APP_CMD_INIT_WINDOW);
-  main->_alogi(" APP_CMD_TERM_WINDOW : %d",APP_CMD_TERM_WINDOW);
-  main->_alogi(" APP_CMD_CONFIG_CHANGED : %d",APP_CMD_CONFIG_CHANGED);
+  std::string scmd;
+  APP_CMD_to_string(a_cmd,scmd);
+  main->_alogi("app_Android::handle_cmd : begin : %d, \"%s\" :",a_cmd,scmd.c_str());
 #endif
   switch(a_cmd) {
   case APP_CMD_INIT_WINDOW:
@@ -592,9 +703,14 @@ static void handle_cmd(struct android_app* a_app,int32_t a_cmd) {
 //case APP_CMD_GAINED_FOCUS:
 //case APP_CMD_LOST_FOCUS:
   default:
-    main->_alogi("APP_CMD : ??? %d",a_cmd);
+   {std::string _scmd;
+    APP_CMD_to_string(a_cmd,_scmd);
+    main->_alogi("APP_CMD : ??? %d \"%s\"",a_cmd,_scmd.c_str());}
     break;
   }
+#ifdef EXLIB_TRACE
+  main->_alogi("app_Android::handle_cmd : end : %d, \"%s\" :",a_cmd,scmd.c_str());
+#endif  
 }
 
 #ifdef INLIB_MEM
@@ -621,7 +737,10 @@ void exlib_main(const std::string& a_app_name,const std::string& a_app_domain,st
   inlib::mem::set_check_by_class(true);{
 #endif
 
+#if defined(__ANDROID_API__) && __ANDROID_API__>=14
+#else
   app_dummy(); // Make sure glue isn't stripped. It is mendatory with ndk-r7.
+#endif
 
   // pwd is /
 
@@ -723,7 +842,12 @@ void exlib_main(const std::string& a_app_name,const std::string& a_app_domain,st
     int ident = ALooper_pollAll(time,NULL,&events,(void**)&source);
     if(ident>=0) {
       if(source) source->process(a_app,source);
-      if(a_app->destroyRequested) _main.set_to_exit();
+      if(a_app->destroyRequested) {
+#ifdef EXLIB_TRACE
+        exlib::Android::logi(a_app_name.c_str(),"exlib_main : a_app->destroyRequested...");
+#endif
+        _main.set_to_exit();
+      }
     }}
 
   }
@@ -743,8 +867,8 @@ void exlib_main(const std::string& a_app_name,const std::string& a_app_domain,st
 
 }
 
-#endif
-
 //exlib_build_use inlib inlib_glutess freetype png jpeg zlib
 //exlib_build_use GL Android
+
+#endif
 

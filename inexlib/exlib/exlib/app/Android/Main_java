@@ -79,8 +79,9 @@ public class Main extends NativeActivity {
 
 
   private void load_resources() {
-    final Object saved_object = getLastNonConfigurationInstance();
-    if(saved_object!=null) return; //done
+    //final Object saved_object = getLastNonConfigurationInstance(); //deprecated.
+    //if(saved_object!=null) return; //done
+
     //First load of Activity.
 
     String app_dir = getFilesDir().getPath();
