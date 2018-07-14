@@ -18,6 +18,7 @@ inline void params2entries(const gui_params& a_params,
   a_node.add_bool(gui_params::s_auto_hide_scene(),a_params.m_auto_hide_scene);
   a_node.add_bool(gui_params::s_image_buttons(),a_params.m_image_buttons);
   a_node.add_bool(gui_params::s_plane_viewer(),a_params.m_plane_viewer);
+  a_node.add_bool(gui_params::s_touch_move(),a_params.m_touch_move);
   a_node.add_bool(gui_params::s_light_on(),a_params.m_light_on);
   a_node.add_bool(gui_params::s_solid(),a_params.m_solid);
   a_node.add_bool(gui_params::s_reduced_wire_frame(),a_params.m_reduced_wire_frame);
