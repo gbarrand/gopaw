@@ -389,36 +389,30 @@ inline void get_styles(const gui_viewer& a_gv,std::vector<std::string>& a_opts){
 
 inline void add_plotter_entries(plotter& a_plotter,entries& a_entries){
 
-    //2
-    a_entries.add_bool("grid.visible",a_plotter.grid_style().visible);
-  
-    //3
+    a_entries.add_bool ("grid.visible"   ,a_plotter.grid_style().visible);
+    a_entries.add_color("grid.color"     ,a_plotter.grid_style().color);
+    a_entries.add_float("grid.line_width",a_plotter.grid_style().line_width);
+    
+    a_entries.add_bool ("inner_frame.visible"   ,a_plotter.inner_frame_style().visible);
+    a_entries.add_color("inner_frame.color"     ,a_plotter.inner_frame_style().color);
+    a_entries.add_float("inner_frame.line_width",a_plotter.inner_frame_style().line_width);
+
     a_entries.add_bool("title.visible",a_plotter.title_style().visible);
-  
-    //4
     a_entries.add_bool("title_box.visible",a_plotter.title_box_style().visible);
-  
-    //5
     a_entries.add_bool("infos.visible",a_plotter.infos_style().visible);
-  
-    //6
     a_entries.add_bool("background.visible",a_plotter.background_style().visible);
-  
-    //7
     a_entries.add_color("background.back_color",a_plotter.background_style().back_color.value());
 
     /////////////////////////////////////////////////
     /// bins[0] /////////////////////////////////////
     /////////////////////////////////////////////////
-    //8
    {std::vector<std::string> opts = a_plotter.bins_modelings(0);
     a_entries.add_opts("bins[0].modeling",opts.size()?opts[0]:"",opts);}
 
-    //8
-    a_entries.add_color("bins[0].color",
-                        a_plotter.bins_style(0).color.value());
+    a_entries.add_color("bins[0].color",a_plotter.bins_style(0).color.value());
 
-    //10
+    a_entries.add_float("bins[0].line_width",a_plotter.bins_style(0).line_width.value());
+
    {std::vector<std::string> opts;
     sg::style_parser::spainting_policies(opts);
     //opts.push_back(s_none());
@@ -429,15 +423,12 @@ inline void add_plotter_entries(plotter& a_plotter,entries& a_entries){
     /////////////////////////////////////////////////
     /// func[0] /////////////////////////////////////
     /////////////////////////////////////////////////
-    //11
     a_entries.add_color("func[0].color",a_plotter.func_style(0).color.value());
 
-    //12
     a_entries.add_float("func[0].line_width",a_plotter.func_style(0).line_width.value());
     //a_entries.add_enum
     //  ("func[0].line_pattern",a_plotter.func_style(0).line_pattern.value());
 
-    //13
    {std::vector<std::string> opts;
     sg::style_parser::spainting_policies(opts);
     //opts.push_back(s_none());
@@ -450,23 +441,32 @@ inline void add_plotter_entries(plotter& a_plotter,entries& a_entries){
 inline return_action action_set_style(gui_viewer& a_gv,entries& a_widget,const plots_data& a_data) {
   plotter& plotter = a_data.m_plots.current_plotter();
 
-  unsigned int index_reset_style            = 0;
-  unsigned int index_style                  = 1;
+  unsigned int index_count = 0;
+  unsigned int index_reset_style            = index_count;index_count++;
+  unsigned int index_style                  = index_count;index_count++;
 
-  unsigned int index_grid_visible           = 2;
-  unsigned int index_title_visible          = 3;
-  unsigned int index_title_box_visible      = 4;
-  unsigned int index_infos_visible          = 5;
-  unsigned int index_background_visible     = 6;
-  unsigned int index_background_back_color  = 7;
+  unsigned int index_grid_visible           = index_count;index_count++;
+  unsigned int index_grid_color             = index_count;index_count++;
+  unsigned int index_grid_line_width        = index_count;index_count++;
+  
+  unsigned int index_inner_frame_visible    = index_count;index_count++;
+  unsigned int index_inner_frame_color      = index_count;index_count++;
+  unsigned int index_inner_frame_line_width = index_count;index_count++;
 
-  unsigned int index_bins_0_modeling   = 8;
-  unsigned int index_bins_0_color      = 9;
-  unsigned int index_bins_0_painting   = 10;
+  unsigned int index_title_visible          = index_count;index_count++;
+  unsigned int index_title_box_visible      = index_count;index_count++;
+  unsigned int index_infos_visible          = index_count;index_count++;
+  unsigned int index_background_visible     = index_count;index_count++;
+  unsigned int index_background_back_color  = index_count;index_count++;
 
-  unsigned int index_func_0_color      = 11;
-  unsigned int index_func_0_line_width = 12;
-  unsigned int index_func_0_painting   = 13;
+  unsigned int index_bins_0_modeling   = index_count;index_count++;
+  unsigned int index_bins_0_color      = index_count;index_count++;
+  unsigned int index_bins_0_line_width = index_count;index_count++;
+  unsigned int index_bins_0_painting   = index_count;index_count++;
+
+  unsigned int index_func_0_color      = index_count;index_count++;
+  unsigned int index_func_0_line_width = index_count;index_count++;
+  unsigned int index_func_0_painting   = index_count;index_count++;
 
   std::vector<std::string>& vals = a_widget.values.values();
 
@@ -500,43 +500,68 @@ inline return_action action_set_style(gui_viewer& a_gv,entries& a_widget,const p
     return return_to_render; //change style override the rest.    
   }}
 
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
  {bool v;
-  if(!to(vals[index_grid_visible],v)) {
-    a_gv.pop_warn(a_data,"not a bool");
-    return return_to_render;     
-  }
+  if(!to(vals[index_grid_visible],v)) {a_gv.pop_warn(a_data,"not a bool");return return_to_render;}
   plotter.grid_style().visible = v;
   plotter.touch();}
 
- {bool v;
-  if(!to(vals[index_title_visible],v)) {
-    a_gv.pop_warn(a_data,"not a bool");
+ {float r,g,b,a;
+  if(!a_widget.get_color(index_grid_color,r,g,b,a)) {
+    a_gv.pop_warn(a_data,"get color failed");
     return return_to_render;     
   }
+  plotter.grid_style().color.value().set_value(r,g,b,a); 
+  plotter.touch();}
+
+ {float v;
+  if(!to(vals[index_grid_line_width],v)) {a_gv.pop_warn(a_data,"not a number");return return_to_render;}
+  plotter.grid_style().line_width = v;
+  plotter.touch();}
+
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+ {bool v;
+  if(!to(vals[index_inner_frame_visible],v)) {a_gv.pop_warn(a_data,"not a bool");return return_to_render;}
+  plotter.inner_frame_style().visible = v;
+  plotter.touch();}
+
+ {float r,g,b,a;
+  if(!a_widget.get_color(index_inner_frame_color,r,g,b,a)) {
+    a_gv.pop_warn(a_data,"get color failed");
+    return return_to_render;     
+  }
+  plotter.inner_frame_style().color.value().set_value(r,g,b,a); 
+  plotter.touch();}
+
+ {float v;
+  if(!to(vals[index_inner_frame_line_width],v)) {a_gv.pop_warn(a_data,"not a number");return return_to_render;}
+  plotter.inner_frame_style().line_width = v;
+  plotter.touch();}
+
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+ {bool v;
+  if(!to(vals[index_title_visible],v)) {a_gv.pop_warn(a_data,"not a bool");return return_to_render;}
   plotter.title_style().visible = v;
   plotter.touch();}
 
  {bool v;
-  if(!to(vals[index_title_box_visible],v)) {
-    a_gv.pop_warn(a_data,"not a bool");
-    return return_to_render;     
-  }
+  if(!to(vals[index_title_box_visible],v)) {a_gv.pop_warn(a_data,"not a bool");return return_to_render;}
   plotter.title_box_style().visible = v;
   plotter.touch();}
 
  {bool v;
-  if(!to(vals[index_infos_visible],v)) {
-    a_gv.pop_warn(a_data,"not a bool");
-    return return_to_render;     
-  }
+  if(!to(vals[index_infos_visible],v)) {a_gv.pop_warn(a_data,"not a bool");return return_to_render;}
   plotter.infos_style().visible = v;
   plotter.touch();}
 
  {bool v;
-  if(!to(vals[index_background_visible],v)) {
-    a_gv.pop_warn(a_data,"not a bool");
-    return return_to_render;     
-  }
+  if(!to(vals[index_background_visible],v)) {a_gv.pop_warn(a_data,"not a bool");return return_to_render;}
   plotter.background_style().visible = v;
   plotter.touch();}
 
@@ -551,16 +576,18 @@ inline return_action action_set_style(gui_viewer& a_gv,entries& a_widget,const p
   /////////////////////////////////////////////////
   /// bins[0] /////////////////////////////////////
   /////////////////////////////////////////////////
+  plotter.bins_style(0).modeling = vals[index_bins_0_modeling];
+  plotter.touch();
+
  {float r,g,b,a;
-  if(!a_widget.get_color(index_bins_0_color,r,g,b,a)) {
-    a_gv.pop_warn(a_data,"get color failed");
-    return return_to_render;     
-  }
+  if(!a_widget.get_color(index_bins_0_color,r,g,b,a)) {a_gv.pop_warn(a_data,"get color failed");return return_to_render;}
   plotter.bins_style(0).color.value().set_value(r,g,b,a); 
   plotter.touch();}
 
-  plotter.bins_style(0).modeling = vals[index_bins_0_modeling];
-  plotter.touch();
+ {float v;
+  if(!to(vals[index_bins_0_line_width],v)) {a_gv.pop_warn(a_data,"not a number");return return_to_render;}
+  plotter.bins_style(0).line_width = v;
+  plotter.touch();}
 
  {const std::string& s = vals[index_bins_0_painting];
   if(s!=s_none()) {
@@ -572,18 +599,12 @@ inline return_action action_set_style(gui_viewer& a_gv,entries& a_widget,const p
   /// func[0] /////////////////////////////////////
   /////////////////////////////////////////////////
  {float r,g,b,a;
-  if(!a_widget.get_color(index_func_0_color,r,g,b,a)) {
-    a_gv.pop_warn(a_data,"get color failed");
-    return return_to_render;     
-  }
+  if(!a_widget.get_color(index_func_0_color,r,g,b,a)) {a_gv.pop_warn(a_data,"get color failed");return return_to_render;}
   plotter.func_style(0).color.value().set_value(r,g,b,a); 
   plotter.touch();}
 
  {float v;
-  if(!to(vals[index_func_0_line_width],v)) {
-    a_gv.pop_warn(a_data,"not a number");
-    return return_to_render;     
-  }
+  if(!to(vals[index_func_0_line_width],v)) {a_gv.pop_warn(a_data,"not a number");return return_to_render;}
   plotter.func_style(0).line_width = v;
   plotter.touch();}
 
