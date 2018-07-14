@@ -54,11 +54,22 @@ for config in ${configs} ; do
   /bin/rm -f ./main.cpp
 done
 
+if [ ${app} = ioda ] ; then
+
+  find ../../gopaw/source -name '*.cpp' -print > cpp_tmp
+  for item in $(cat ./cpp_tmp) ; do
+    ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ${item}
+  done
+  /bin/rm -f ./cpp_tmp         
+    
+  ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../../inexlib/exlib/exlib/swig/inlib_i
+fi
+
 if [ ${app} = gopaw ] ; then
   ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../source/gopaw.cpp
   ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../source/PAW.cpp
-#  ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../source/UI_offscreen
   ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../../inexlib/exlib/exlib/swig/inlib_i
+
 else
   ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../X11/main.cpp
   ${inlib_incs} ${verbose} -pack -dirs=${dirs} -nos=${nos} -to="${to}/${app}/mgr" ../Windows/main.cpp
@@ -99,6 +110,13 @@ if [ ${app} = g4exa ] ; then items="${items} AIDA";fi
 if [ ${app} = g4view ] ; then items="${items} pythia8";fi
 if [ ${app} = TouchSky ] ; then items="${items} cfitsio hdf5 wcslib lua";fi
 if [ ${app} = gopaw ] ; then items="${items} KUIP Getline Python hdf5 cfitsio";fi
+if [ ${app} = ioda ] ; then
+  items="${items} CoinGL HEPVis"
+  items="${items} graphviz Python lua"
+  items="${items} hdf5 cfitsio wcslib"
+  items="${items} SOPHYA dcmtk"
+  items="${items} KUIP"
+fi
 for item in ${items} ; do
   /bin/cp -R ${ourex_home}/${item} ${to}/inexlib/ourex/.
 done
@@ -119,10 +137,49 @@ fi
 /bin/cp -R ../mgr     ${to}/${app}/.
 /bin/cp -R ../res     ${to}/${app}/.
 /bin/cp -R ../comres  ${to}/${app}/.
+if [ -d ../docker ] ; then
+  /bin/cp -R ../docker  ${to}/${app}/.
+fi
 
 /bin/cp -R ../Android ${to}/${app}/.
 
 /bin/cp ${exlib_home}/exlib/app/Android/Main_java ${to}/inexlib/exlib/exlib/app/Android/.
+
+if [ ${app} = ioda ] ; then
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/cbk
+  /bin/cp ${exlib_home}/exlib/cbk/wall ${to}/inexlib/exlib/exlib/cbk/.
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/yacc
+  /bin/cp -R ${exlib_home}/exlib/yacc   ${to}/inexlib/exlib/exlib/.
+
+  /bin/cp -R ../../gopaw/source             ${to}/gopaw/.
+  /bin/cp -R ../../gopaw/gopaw              ${to}/gopaw/.
+  /bin/cp ${inlib_home}/inlib/arrout        ${to}/inexlib/inlib/inlib/.
+
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/spy
+  /bin/cp ${exlib_home}/exlib/spy/inlib.py ${to}/inexlib/exlib/exlib/spy/.
+  /bin/cp ${exlib_home}/exlib/spy/exlib.py ${to}/inexlib/exlib/exlib/spy/.
+  /bin/cp ${exlib_home}/exlib/spy/inlib_swig_py.cpp ${to}/inexlib/exlib/exlib/spy/.
+  /bin/cp ${exlib_home}/exlib/spy/inlib_swig_py.icc ${to}/inexlib/exlib/exlib/spy/.
+
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/slua
+  /bin/cp ${exlib_home}/exlib/slua/inlib_swig_lua.cpp ${to}/inexlib/exlib/exlib/slua/.
+  /bin/cp ${exlib_home}/exlib/slua/inlib_swig_lua.icc ${to}/inexlib/exlib/exlib/slua/.
+  
+  /bin/mkdir -p ${to}/inexlib/exlib/exlib/swig
+  /bin/cp ${exlib_home}/exlib/swig/inlib_i ${to}/inexlib/exlib/exlib/swig/.
+  /bin/cp ${inlib_home}/inlib/printer ${to}/inexlib/inlib/inlib/.
+  /bin/cp ${inlib_home}/inlib/get_cout ${to}/inexlib/inlib/inlib/.
+  /bin/cp -R ${inlib_home}/inlib/waxml ${to}/inexlib/inlib/inlib/.
+  /bin/cp -R ${inlib_home}/inlib/rroot ${to}/inexlib/inlib/inlib/.
+  /bin/cp -R ${inlib_home}/inlib/store ${to}/inexlib/inlib/inlib/.
+
+  /bin/cp ${inlib_home}/inlib/fstring ${to}/inexlib/inlib/inlib/.
+
+  /bin/cp -R ${exlib_home}/exlib/iv ${to}/inexlib/exlib/exlib/.
+
+  /bin/cp -R ${exlib_home}/exlib/app/Cocoa ${to}/inexlib/exlib/exlib/app/.
+  /bin/cp -R ${inlib_home}/inlib/gldum ${to}/inexlib/inlib/inlib/.    # CoinGL offscreen.
+fi
 
 if [ ${app} = g4view ] ; then
   /bin/mkdir -p ${to}/inexlib/exlib/exlib/cbk
@@ -154,9 +211,6 @@ if [ ${app} = TouchSky ] ; then
   /bin/mkdir -p ${to}/inexlib/exlib/exlib/slua
   /bin/cp ${exlib_home}/exlib/slua/inlib_swig_lua.cpp ${to}/inexlib/exlib/exlib/slua/.
   /bin/cp ${exlib_home}/exlib/slua/inlib_swig_lua.icc ${to}/inexlib/exlib/exlib/slua/.
-
-  /bin/cp ${exlib_home}/exlib/slua/exlib_swig_lua.cpp ${to}/inexlib/exlib/exlib/slua/.
-  /bin/cp ${exlib_home}/exlib/slua/exlib_swig_lua.icc ${to}/inexlib/exlib/exlib/slua/.
 
   /bin/mkdir -p ${to}/inexlib/exlib/exlib/swig
   /bin/cp ${exlib_home}/exlib/swig/inlib_i ${to}/inexlib/exlib/exlib/swig/.
@@ -202,7 +256,7 @@ if [ ${app} = gopaw ] ; then
   /bin/cp -R ../scripts  ${to}/gopaw/.
   ./clean_exas
   /bin/cp -R ../examples ${to}/gopaw/.
-  /bin/rm -R ${to}/gopaw/examples/users/fcavalier_lock_acq
+  /bin/rm -R -f ${to}/gopaw/examples/users/fcavalier_lock_acq
 
   /bin/cp ../doc/README_for_pack ${to}/README
 fi
@@ -260,6 +314,7 @@ ${bush_home}/find_rm ${to} 'secure.properties'
 /bin/rm -R -f ${to}/${app}/iOS/${app}.xcodeproj/xcuserdata
 
 /bin/rm -f ${to}/${app}/mgr/inlib_platform
+/bin/rm -f ${to}/${app}/mgr/main.cpp
 
 ${bush_home}/find_rm ${to}/${app}/mgr '*.zip'
 
