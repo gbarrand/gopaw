@@ -1,3 +1,6 @@
+- inlib/sg/view_plots : add_plotter_entries : Windows-XP : some color => color.value().
+- ourex/KUIP : kmacro.c/parse_statement : Windows-XP : displace some declaration at head of function to be "pure C".
+
 2.0.0 :
 - IMPORTANT : for ntuple from root, HDF5 and fits files, avoid a copy on an aida::ntuple.
 - examples/gopaw/nplot.kumac : remove 'close 10'.
