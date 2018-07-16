@@ -1159,6 +1159,9 @@ KumacStatement parse_statement( line )
 {
   KmCommand **cmd_list;
   KmCommand *cmd;
+  char* tok2;
+  char* p;
+  int len1,n;
   KumacStatement stmt = SYNTAX_ERROR;
   char *tokline = strdup( line );
   char *tok1 = strqtok( tokline );
@@ -1168,10 +1171,8 @@ KumacStatement parse_statement( line )
     free( tokline );
     return stmt;
   }
-  char *tok2 = strqtok( NULL );
-  char *p;
-  int len1 = strlen( tok1 );
-  int n;
+  tok2 = strqtok( NULL );
+  len1 = strlen( tok1 );
 
   if( stmt_arg1 != NULL ) {
     free( stmt_arg1 );
