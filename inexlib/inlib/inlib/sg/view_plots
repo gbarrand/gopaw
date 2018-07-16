@@ -390,11 +390,11 @@ inline void get_styles(const gui_viewer& a_gv,std::vector<std::string>& a_opts){
 inline void add_plotter_entries(plotter& a_plotter,entries& a_entries){
 
     a_entries.add_bool ("grid.visible"   ,a_plotter.grid_style().visible);
-    a_entries.add_color("grid.color"     ,a_plotter.grid_style().color);
+    a_entries.add_color("grid.color"     ,a_plotter.grid_style().color.value());
     a_entries.add_float("grid.line_width",a_plotter.grid_style().line_width);
     
     a_entries.add_bool ("inner_frame.visible"   ,a_plotter.inner_frame_style().visible);
-    a_entries.add_color("inner_frame.color"     ,a_plotter.inner_frame_style().color);
+    a_entries.add_color("inner_frame.color"     ,a_plotter.inner_frame_style().color.value());
     a_entries.add_float("inner_frame.line_width",a_plotter.inner_frame_style().line_width);
 
     a_entries.add_bool("title.visible",a_plotter.title_style().visible);
