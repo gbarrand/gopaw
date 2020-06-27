@@ -1,4 +1,0 @@
-macro python
-/session/python histo.py
-return
-
