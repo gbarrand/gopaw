@@ -1,12 +1,12 @@
 
   To build :
     UNIX> cd gopaw/mgr
-    UNIX> ./build  # X11 version on macOS, Linux, win32 on a Windows-10/cygwin.
+    UNIX> ./build  # X11 version on macOS, Linux, win32 on a Windows-10/CYGWIN.
   ( UNIX> ./build -v)
   ( UNIX> ./build -x  # for a full traceback)
     UNIX> ./build -offscreen -bin_offscreen  # for the offscreen version (user is not prompted).
     
- (here UNIX is for Linux, macOS, Windows-10/cygwin)
+ (here UNIX is for Linux, macOS, Windows-10/CYGWIN)
 
   If the GNU parallel application is known from your prompt, you can use the "-parallel"
  option so that C and C++ file compilations are distributed on your cores. This feature
@@ -14,6 +14,13 @@
  and on centos7 by using the GNU distribution. Since good part of the code of gopaw
  is pure header, it will not boost the "main" part of it, but it clearly boosts the
  build of the ourex externals.
+
+  On Windows-10/CYGWIN, we use by default the VisualC++ compiler since, by default, the graphics
+ of our apps is done by using the Microsoft WIN32 libraries (in particular the opengl32.lib one).
+ It is assumed that "cl.exe" (the VisualC++ compiler) is in your PATH, then before attempting
+ to build, be sure that you have installed and "setup" VisualC++ so that this command is available from
+ your CYGWIN prompt. See in the bush/Prerequisites section under https://gbarrand.github.io/bush/index.html
+ the Windows-10 subsection for instructions.
 
   At end, you should have a distribution file :
     bin_<config>/distrib/gopaw-<version>-<platform>.zip
@@ -32,7 +39,7 @@
     UNIX> cd ../../mgr
     UNIX> ./clean_exas
 
- On Windows, the application must be run from a DOS prompt (and not from cygwin since Getline does
+ On Windows, the application must be run from a DOS prompt (and not from CYGWIN since Getline does
  not work from here) :
     DOS> cd gopaw\mgr
     DOS> cd ..\examples\PAW_py_root
