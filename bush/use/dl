@@ -5,6 +5,10 @@ if [ "${use_dl}" = "yes" ] ; then
 
   if [ ${build_visual} = "yes" ] ; then
     echo dummy > /dev/null
+
+  elif [ `uname` = Darwin ] ; then
+    echo dummy > /dev/null
+
   else
 
     lib_dirs="/usr/${lib} /usr/lib/x86_64-linux-gnu"
