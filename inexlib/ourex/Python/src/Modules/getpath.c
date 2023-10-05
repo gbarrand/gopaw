@@ -8,6 +8,7 @@
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
+#include <AvailabilityMacros.h>
 #endif
 
 /* Search in some common locations for the associated Python libraries.
@@ -357,7 +358,7 @@ search_for_exec_prefix(char *argv0_path, char *home)
 	n = fread(rel_builddir_path, 1, MAXPATHLEN, f);
 	rel_builddir_path[n] = '\0';
 	fclose(f);
-	if (n >= 0) {
+	/*if (n >= 0)*/ { /*G.Barrand : rm warning : comparison of unsigned expression >= 0 is always true.*/
 	  strcpy(exec_prefix, argv0_path);
 	  joinpath(exec_prefix, rel_builddir_path);
 	  return -1;
