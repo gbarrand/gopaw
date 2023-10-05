@@ -14,6 +14,8 @@ if [ "${use_GLX}" = "yes" ] ; then
   fi
   if [ `uname` = Darwin ] ; then
     inc_dirs="/opt/local/include /usr/include /usr/X11/include"
+    ccflags="${ccflags} -DEXLIB_USE_GL_GL_H"
+    cppflags="${cppflags} -DEXLIB_USE_GL_GL_H"
   else
     inc_dirs="/usr/X11R6/include /usr/include"
   fi
