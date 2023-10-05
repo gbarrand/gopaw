@@ -58,6 +58,9 @@ if [ ${build_app} = "yes" ] ; then
 
   if [ ${build_Python} = "yes" ] ; then
     cppflags="${cppflags} -DAPP_USE_PYTHON"
+    if [ `uname` = Darwin ] ; then
+      cppflags="${cppflags} -Wno-deprecated-declarations"  # avoid warnings on deprecated sprintf.
+    fi
     cppfiles="${cppfiles} ${exlib_home}/exlib/spy/inlib_swig_py.cpp"
   fi
   
